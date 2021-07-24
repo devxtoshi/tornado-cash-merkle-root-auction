@@ -1,5 +1,8 @@
 pragma 0.8.0;
 
+import "@sablierhq/sablier-smooth-contracts/blob/master/contracts/Sablier.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+
 import "./interfaces/ITornadoTrees.sol";
 
 contract ClaimRewards {
@@ -10,8 +13,22 @@ contract ClaimRewards {
   ITornadoTrees public tornadoTreesV2;
 
   constructor() {
-    tornadoTreesV2 = ITornadoTrees(treesProxy);
-    tornadoTreesV1 = ITornadoTrees(tornadoTreesV2.tornadoTreesV1());
+    tornadoTrees = ITornadoTrees(treesProxy);
   }
+
+  function leavesUntilDepositSync() external returns (uint256 remainingLeaves) {
+    uint256 totalLeaves = tornadoTrees.withdrawalsLength();
+    uint256 lastLeaf = tornadoTrees.lastProcessedDepositLeaf();
+
+    remainingLeaves = totalLeaves - lastLeaf;
+  }
+
+  function leavesUntilWithdrawalSync() external returns (uint256 remainingLeaves) {
+    uint256 totalLeaves = tornadoTrees.withdrawalsLength();
+    uint256 lastDepositLeaf = tornado.lastProcessedWithdrawalLeaf();
+
+    remainingLeaves = totalLeaves - lastLeaf;
+  }
+
 
 }

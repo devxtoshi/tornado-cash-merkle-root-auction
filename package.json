@@ -1,0 +1,22 @@
+{
+  "name": "tornado-cash-merkle-root-auction",
+  "version": "1.0.0",
+  "description": "A mechanism to reward  the Merkle root updaters for the withdrawal and deposit trees.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/samgos/tornado-cash-merkle-root-auction.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/samgos/tornado-cash-merkle-root-auction/issues"
+  },
+  "homepage": "https://github.com/samgos/tornado-cash-merkle-root-auction#readme",
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.2.0"
+  }
+}
