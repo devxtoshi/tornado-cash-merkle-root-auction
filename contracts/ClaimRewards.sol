@@ -20,14 +20,14 @@ contract ClaimRewards {
     uint256 totalLeaves = tornadoTrees.withdrawalsLength();
     uint256 lastLeaf = tornadoTrees.lastProcessedDepositLeaf();
 
-    remainingLeaves = totalLeaves - lastLeaf;
+    remainingLeaves = totalLeaves.sub(lastLeaf);
   }
 
   function leavesUntilWithdrawalSync() external returns (uint256 remainingLeaves) {
     uint256 totalLeaves = tornadoTrees.withdrawalsLength();
     uint256 lastDepositLeaf = tornado.lastProcessedWithdrawalLeaf();
 
-    remainingLeaves = totalLeaves - lastLeaf;
+    remainingLeaves = totalLeaves.sub(lastLeaf);
   }
 
 
