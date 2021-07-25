@@ -1,7 +1,5 @@
 pragma 0.8.0;
 
-import "@sablierhq/sablier-smooth-contracts/blob/master/contracts/Sablier.sol";
-
 import "./interfaces/ITornadoTrees.sol";
 import "./interfaces/ISablier.sol";
 
@@ -22,7 +20,7 @@ contract MerkleRootAuction {
   }
 
   function leavesUntilDepositSync() external pure returns (uint256 remainingLeaves) {
-    uint256 totalLeaves = tornadoTrees.withdrawalsLength();
+    uint256 totalLeaves = tornadoTrees.depositsLength();
     uint256 lastLeaf = tornadoTrees.lastProcessedDepositLeaf();
 
     remainingLeaves = totalLeaves - lastLeaf;
@@ -35,16 +33,44 @@ contract MerkleRootAuction {
     remainingLeaves = totalLeaves - lastLeaf;
   }
 
-  function pendingLeaves() external returns (uint256 leaves) {
+  function pendingLeaves() external pure returns (uint256 leaves) {
    leaves = leavesUntilDepositSync() + leavesUntilWithdrawalSync();
   }
 
-  function queryReward(uint256 withdrawals, uint256 deposits) external pure returns (uint256 reward) {
+  function queryReward(uint256 deposits, uint256 withdrawals) external pure returns (uint256 reward) {
     uint256 streamBalance = merkleStream.balanceOf(merkleStreamId, address(this));
     uint256 queryFufilment  = (withdrawals + deposits) * BASE18;
-    uint256 relativeFufilment = totalFufilment / pendingLeaves();
+    uint256 totalFufilment = queryFufilment / pendingLeaves();
 
     reward = (streamBalance * totalFufilment) / BASE18;
+  }
+
+  function updateRoots(
+    TreeLeaf[CHUNK_SIZE][] calldata events,
+    bytes[] calldata proofs,
+    bytes32[] argsHashes,
+    uint32[] pathIndices,
+    bytes32[] roots
+  ) public returns (bool) {
+    uint256 lastWLeafIndex = tornadoTrees.lastProcessedWithdrawalLeaf();
+    uint256 lastDLeafIndex = tornadoTrees.lastProcessedDepositLeaf();
+    uint256 reward = queryReward(pathIndices[0], pathIndices[1]);
+    bytes32 lastWLeaf = tornadoTrees.withdrawals[lastWLeafIndex];
+    bytes32 lastDLeaf = tornadoTrees.deposits[lastDLeafIndex];
+
+    require(
+      tornadoTrees.updateDepositTree(
+        proofs[0], argsHashes[0], lastDLeaf, roots[0], pathIndices[0], events[0]
+      ), "Failure to update the deposit tree"
+    );
+
+    require(
+      tornadoTrees.updateWithdrawalTree(
+        proofs[1], argsHashes[1], lastWLeaf, roots[1], pathIndices[1], events[1]
+      ), "Failure to update the withdrawal tree"
+    );
+
+    require(merkleStream.withdrawFromStream(merkleStream, msg.sender));
   }
 
 }

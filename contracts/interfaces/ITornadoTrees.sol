@@ -37,4 +37,8 @@ interface ITornadoTrees {
 
   function lastProcessedDepositLeaf() external view returns (bytes32)
 
+  function withdrawals(uint256 i) external view returns (bytes32)
+
+  function deposits(uint256 i) external view returns (bytes32)
+
 }
