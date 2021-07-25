@@ -17,6 +17,10 @@
   },
   "homepage": "https://github.com/samgos/tornado-cash-merkle-root-auction#readme",
   "dependencies": {
-    "@openzeppelin/contracts": "^4.2.0"
+    "@openzeppelin/contracts": "^4.2.0",
+    "hardhat": "^2.5.0"
+  },
+  "devDependencies": {
+    "typescript": "^4.3.5"
   }
 }
