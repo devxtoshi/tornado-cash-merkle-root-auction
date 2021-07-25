@@ -1,4 +1,4 @@
-pragma 0.8.0;
+pragma solidity 0.8.0;
 
 uint256 public constant CHUNK_TREE_HEIGHT = 8;
 uint256 public constant CHUNK_SIZE = 2**CHUNK_TREE_HEIGHT;

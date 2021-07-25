@@ -1,4 +1,4 @@
-pragma 0.8.0;
+pragma solidity 0.8.0;
 
 import "@sablierhq/sablier-smooth-contracts/blob/master/contracts/Sablier.sol";
 
