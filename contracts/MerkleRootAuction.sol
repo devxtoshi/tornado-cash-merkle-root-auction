@@ -36,6 +36,14 @@ contract MerkleRootAuction {
     remainingLeaves = totalLeaves - lastLeaf;
   }
 
+  function leavesUntilWithdrawal(uint256 i) external pure returns (uint256 leaves) {
+    leaves = (i - tornadoTrees.lastProcessedWithdrawalLeaf());
+  }
+
+  function leavesUntilDeposit(uint256 i) external pure returns (uint256 leaves) {
+    leaves = (i - tornadoTrees.lastProcessedDepositLeaf());
+  }
+
   function pendingLeaves() external pure returns (uint256 leaves) {
    leaves = leavesUntilDepositSync() + leavesUntilWithdrawalSync();
   }
@@ -59,7 +67,9 @@ contract MerkleRootAuction {
   ) public returns (bool) {
     uint256 lastWLeafIndex = tornadoTrees.lastProcessedWithdrawalLeaf();
     uint256 lastDLeafIndex = tornadoTrees.lastProcessedDepositLeaf();
-    uint256 reward = queryReward(pathIndices[0], pathIndices[1]);
+    uint256 leafWCount = leavesUntilWithdrawal(pathIndices[1]);
+    uint256 leafDCount = leavesUntilDeposit(pathIndices[0]);
+    uint256 reward = queryReward(leafDCount, leafWCount);
 
     require(merkleStream.withdrawFromStream(merkleStream, address(this)));
 
@@ -79,6 +89,8 @@ contract MerkleRootAuction {
     );
 
     require(tornToken.transfer(address(msg.sender), reward));
+    
+    return true;
   }
 
 
