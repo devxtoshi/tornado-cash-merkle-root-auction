@@ -17,14 +17,13 @@
   },
   "homepage": "https://github.com/samgos/tornado-cash-merkle-root-auction#readme",
   "dependencies": {
-    "@openzeppelin/contracts": "^4.2.0"
-    "@openzeppelin/contracts-ethereum-package": "2.2.3",
-    "@openzeppelin/upgrades": "2.5.0"
-   },
+    "@openzeppelin/contracts": "^4.2.0",
+    "@openzeppelin/contracts-ethereum-package": "^3.0.0"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "@openzeppelin/upgrades": "^2.8.0",
     "ethereum-waffle": "^3.4.0",
     "ethers": "^5.4.2",
     "hardhat": "^2.5.0",

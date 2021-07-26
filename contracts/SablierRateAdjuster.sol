@@ -1,6 +1,6 @@
 pragma solidity 0.8.0;
 
-import "@sablierhq/sablier-smooth-contracts/blob/master/contracts/Sablier.sol";
+import "./inherits/Sablier.sol";
 
 contract SablierRateAdjuster is Sablier {
 
