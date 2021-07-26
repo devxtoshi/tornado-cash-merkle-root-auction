@@ -45,7 +45,7 @@ contract MerkleRootAuction {
   }
 
   function pendingLeaves() external pure returns (uint256 leaves) {
-   leaves = leavesUntilDepositSync() + leavesUntilWithdrawalSync();
+    leaves = leavesUntilDepositSync() + leavesUntilWithdrawalSync();
   }
 
   function queryReward(uint256 deposits, uint256 withdrawals) external pure returns (uint256 reward) {
@@ -89,7 +89,7 @@ contract MerkleRootAuction {
     );
 
     require(tornToken.transfer(address(msg.sender), reward));
-    
+
     return true;
   }
 
