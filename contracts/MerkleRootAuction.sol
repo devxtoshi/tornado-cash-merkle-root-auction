@@ -59,11 +59,11 @@ contract MerkleRootAuction {
   }
 
   function updateRoots(
-    TreeLeaf[CHUNK_SIZE][] calldata events,
-    bytes[] calldata proofs,
-    bytes32[] argsHashes,
-    uint32[] pathIndices,
-    bytes32[] roots
+    TreeLeaf[CHUNK_SIZE][2] calldata events,
+    bytes[2] calldata proofs,
+    bytes32[2] argsHashes,
+    uint32[2] pathIndices,
+    bytes32[2] roots
   ) public returns (bool) {
     uint256 lastWLeafIndex = tornadoTrees.lastProcessedWithdrawalLeaf();
     uint256 lastDLeafIndex = tornadoTrees.lastProcessedDepositLeaf();
