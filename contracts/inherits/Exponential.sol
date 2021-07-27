@@ -227,4 +227,3 @@ contract Exponential is CarefulMath {
         return value.mantissa == 0;
     }
 }
-{"mode":"full","isActive":false}

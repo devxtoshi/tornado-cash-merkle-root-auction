@@ -51,7 +51,7 @@ contract Sablier is IERC1620, Exponential, ReentrancyGuard {
     /**
      * @notice The stream objects identifiable by their unsigned integer ids.
      */
-    mapping(uint256 => Types.Stream) private streams;
+    mapping(uint256 => Types.Stream) internal streams;
 
     /*** Modifiers ***/
 
@@ -301,7 +301,7 @@ contract Sablier is IERC1620, Exponential, ReentrancyGuard {
      * @return bool true=success, otherwise false.
      */
     function cancelStream(uint256 streamId)
-        external
+        public
         nonReentrant
         streamExists(streamId)
         onlySenderOrRecipient(streamId)

@@ -4,10 +4,8 @@ export const TORN_MAINNET = 0x77777feddddffc19ff86db637967013e6c6a116c
 export const TORN_GOERLI = 0x77777feddddffc19ff86db637967013e6c6a116c
 
 export const solConfig  = {
-  settings: {
-     optimizer: {
-       enabled: true,
-       runs: 1000,
-     }
-   }
+    optimizer: {
+      enabled: true,
+      runs: 1000,
+    }
  }
