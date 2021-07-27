@@ -15,7 +15,7 @@ contract MerkleRootAuction {
   uint256 merkleStreamId;
   address operator;
 
-  modifier isOperator() public {
+  modifier isOperator() {
     require(operator == msg.sender);
     _;
   }
@@ -23,17 +23,17 @@ contract MerkleRootAuction {
   constructor(
     address treesAddress,
     address tokenAddress,
-    address streamAddress,
+    address streamAddress
   ) {
     tornadoTrees = ITornadoTrees(treesAddress);
     merkleStream = ISablier(streamAddress);
     tornToken = IERC20(tokenAddress);
-    merkleStreamId = streamId;
     operator = msg.sender;
   }
 
   function initialiseStream(uint256 streamId) isOperator() public {
-    (sender, recipient, tokenAddress) = merkleStream.getStream(streamId);
+    (address sender, address recipient, , address tokenAddress, , , , ) =
+     merkleStream.getStream(streamId);
 
     require(sender == operator && recipient == address(this));
     require(tokenAddress == address(tornToken));
