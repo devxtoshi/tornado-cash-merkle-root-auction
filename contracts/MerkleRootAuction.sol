@@ -26,16 +26,16 @@ contract MerkleRootAuction {
     merkleStreamId = streamId;
   }
 
-  function leavesUntilDepositSync() public view returns (uint256 remainingLeaves) {
-    uint256 totalLeaves = tornadoTrees.depositsLength();
-    uint256 lastLeaf = tornadoTrees.lastProcessedDepositLeaf();
+  function leavesUntilWithdrawalSync() public view returns (uint256 remainingLeaves) {
+    uint256 totalLeaves = tornadoTrees.withdrawalsLength();
+    uint256 lastLeaf = tornadoTrees.lastProcessedWithdrawalLeaf();
 
     remainingLeaves = totalLeaves - lastLeaf;
   }
 
-  function leavesUntilWithdrawalSync() public view returns (uint256 remainingLeaves) {
-    uint256 totalLeaves = tornadoTrees.withdrawalsLength();
-    uint256 lastLeaf = tornadoTrees.lastProcessedWithdrawalLeaf();
+  function leavesUntilDepositSync() public view returns (uint256 remainingLeaves) {
+    uint256 totalLeaves = tornadoTrees.depositsLength();
+    uint256 lastLeaf = tornadoTrees.lastProcessedDepositLeaf();
 
     remainingLeaves = totalLeaves - lastLeaf;
   }
@@ -73,8 +73,8 @@ contract MerkleRootAuction {
     TreeLeaf[CHUNK_SIZE][2] calldata events,
     bytes[2] calldata proofs,
     bytes32[2] memory argsHashes,
-    uint32[2] memory i,
-    bytes32[2] memory roots
+    bytes32[2] memory roots,
+    uint32[2] memory i
   ) external returns (bool) {
     uint256 payout = reward(leavesUntilDeposit(i[0]), leavesUntilWithdrawal(i[1]));
     bytes32[2] memory latestLeaves = getLatestLeaves();
@@ -93,10 +93,12 @@ contract MerkleRootAuction {
       proofs[1], argsHashes[1], latestLeaves[1], roots[1], i[1], events[1]
     );
 
+    latestLeaves = getLatestLeaves();
+
+    require(latestLeaves[0] == roots[0] && latestLeaves[1] == roots[1]);
     require(tornToken.transfer(address(msg.sender), payout));
 
     return true;
   }
-
 
 }
