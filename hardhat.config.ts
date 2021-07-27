@@ -1,9 +1,16 @@
-import "@nomiclabs/hardhat-ethers"
 import "@nomiclabs/hardhat-waffle"
 
+import { HardhatUserConfig } from "hardhat/types"
 import { solConfig } from './scripts/constants'
+import { task } from "hardhat/config"
 
-module.exports = {
+const configuration: HardhatUserConfig = {
+  networks: {
+    goerli: {
+      url: `https://goerli.infura.io/v3/${INFURA_KEY}`,
+      accounts: [`0x${PRIVATE_KEY}`],
+    },
+  },
   solidity: {
     compilers: [
       {
@@ -19,5 +26,7 @@ module.exports = {
          settings: solConfig
       }
     ],
-  },
-};
+  }
+}
+
+export default configuration
