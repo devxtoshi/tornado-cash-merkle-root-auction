@@ -5,10 +5,13 @@ import { Signer, BigNumber } from "ethers"
 
 import { TORNADO_TREES_GOERLI, TEST_TORN, SABLIER, AUCTION } from "../scripts/constants"
 
+const base: BigNumber = BigNumber.from(10).pow(18)
+const amount: BigNumber = (BigNumber.from(100)).mul(base)
+
 describe('MerkleRootAuction', () => {
+  let streamId: any
+
   it('Create stream', async() => {
-    const base: BigNumber = BigNumber.from(10).pow(18)
-    const amount: BigNumber = (BigNumber.from(100)).mul(base)
     const latestBlockNumber = await ethers.provider.getBlockNumber()
     const latestBlock = await ethers.provider.getBlock(latestBlockNumber)
 
@@ -28,9 +31,19 @@ describe('MerkleRootAuction', () => {
       { gasLimit: 4200000 }
     )).wait().then((reciept: any) => {
       const { args }  = reciept.events[reciept.events.length-1]
-      const streamId = args[args.length-7].toNumber()
+      const id = args[args.length-7].toNumber()
 
-      console.log(`Stream id: ${streamId}`)
+      console.log(`Stream id: ${id}`)
+      streamId = id
     })
   })
+
+  it('Initialise stream', async() => {
+    const MerkleRootAuctionABI = await ethers.getContractFactory("MerkleRootAuction")
+    const MerkleRootAuction = await MerkleRootAuctionABI.attach(AUCTION)
+
+    await MerkleRootAuction.initialiseStream(streamId)
+  })
+
+  it('Update roots', async() => {})
 })

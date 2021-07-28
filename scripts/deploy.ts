@@ -7,7 +7,7 @@ async function main() {
 
   await run('compile')
 
-  console.log('Deploying contracts...')
+  console.log('Deploying contracts... \n')
 
   try {
     const SablierRateAdjusterABI = await ethers.getContractFactory("SablierRateAdjuster")
