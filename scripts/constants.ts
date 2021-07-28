@@ -4,6 +4,9 @@ export const TORN_MAINNET = "0x77777FeDdddFfC19Ff86DB637967013e6C6A116C"
 export const TORN_GOERLI = "0x77777FeDdddFfC19Ff86DB637967013e6C6A116C"
 export const TEST_TORN = "0xAAc49a39F480469f1C8177097fdE3C9AF6BF8c0c"
 
+export const SABLIER = "0x585F459a76d4d9b6BC6a59eCaDEb075a771ABC3A"
+export const AUCTION = "0x7687CD651eE4F9D81C2f6A45639842C390278264"
+
 export const solConfig  = {
     optimizer: {
       enabled: true,
