@@ -1,6 +1,5 @@
 import { expect } from 'chai'
 import { ethers } from "hardhat"
-import { Signer } from "ethers"
 
 import { TORNADO_TREES_GOERLI, TORN_GOERLI, TEST_TORN } from "../scripts/constants"
 

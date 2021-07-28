@@ -1,19 +1,35 @@
 import { run, ethers } from "hardhat";
+import { Signer } from "ethers"
+
+import { TORNADO_TREES_GOERLI, TEST_TORN } from "./constants"
 
 async function main() {
-  run('compile')
 
-  console.log('Deploying SablierRateAdjuster.sol...')
+  await run('compile')
+
+  console.log('Deploying contracts...')
 
   try {
-    const account: Signer = (await ethers.getSigners())[0]
     const SablierRateAdjusterABI = await ethers.getContractFactory("SablierRateAdjuster")
+    const MerkleRootAuctionABI = await ethers.getContractFactory("MerkleRootAuction")
     const SablierRateAdjuster = await SablierRateAdjusterABI.deploy()
 
     await SablierRateAdjuster.deployed()
 
-    console.log(`\n Deployed at ${SablierRateAdjuster.address}`)    
+    const MerkleRootAuction = await MerkleRootAuctionABI.deploy(
+      TORNADO_TREES_GOERLI, TEST_TORN, SablierRateAdjuster.address,
+    )
+
+    await MerkleRootAuction.deployed()
+
+    console.log(
+      'Deployments: \n '
+      + `SablierRateAdjuster: ${SablierRateAdjuster.address} \n `
+      + `MerkleRootAuction: ${MerkleRootAuction.address}`
+    )
   } catch(e) {
-    console.log(`\n Failed to deploy`)
+    console.log(`Failed to deploy: ${e}`)
   }
 }
+
+main().then(() => process.exit(0))

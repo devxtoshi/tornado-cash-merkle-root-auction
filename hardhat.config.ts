@@ -26,6 +26,9 @@ const configuration: HardhatUserConfig = {
          settings: solConfig
       }
     ],
+  },
+  mocha: {
+    timeout: 20000
   }
 }
 
