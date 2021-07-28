@@ -1,4 +1,4 @@
-import { run, ethers } from "hardhat";
+import { run, ethers } from "hardhat"
 import { Signer } from "ethers"
 
 import { TORNADO_TREES_GOERLI, TEST_TORN } from "./constants"
