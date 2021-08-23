@@ -85,14 +85,23 @@ contract MerkleRootAuction {
   }
 
   function updateRoots(
-    TreeLeaf[CHUNK_SIZE][2] calldata events,
     bytes[2] calldata proofs,
-    bytes32[2] memory argsHashes,
-    bytes32[2] memory roots,
-    uint32[2] memory i
+    bytes32[2] argsHashes,
+    bytes32[2] currentRoots,
+    bytes32[2] newRoot,
+    uint32[2] pathIndices,
+    TreeLeaf[2][CHUNK_SIZE] calldata events
   ) external returns (bool) {
-    uint256 payout = reward(leavesUntilDeposit(i[0]), leavesUntilWithdrawal(i[1]));
+    uint256 payout = reward(leavesUntilDeposit(pathIndices[0]), leavesUntilWithdrawal(pathIndices[1]));
     bytes32[2] memory latestLeaves = getLatestLeaves();
+
+    tornadoTrees.updateDepositTree(
+      proofs[0], argsHashes[0], latestLeaves[0], newRoots[0], pathIndices[0], events[0]
+    );
+
+    tornadoTrees.updateWithdrawalTree(
+      proofs[1], argsHashes[1], latestLeaves[1], newRoots[1], pathIndices[1], events[1]
+    );
 
     require(
       merkleStream.withdrawFromStream(
@@ -100,20 +109,10 @@ contract MerkleRootAuction {
       ), "Failure to withdraw stream balance"
     );
 
-    tornadoTrees.updateDepositTree(
-      proofs[0], argsHashes[0], latestLeaves[0], roots[0], i[0], events[0]
-    );
-
-    tornadoTrees.updateWithdrawalTree(
-      proofs[1], argsHashes[1], latestLeaves[1], roots[1], i[1], events[1]
-    );
-
     latestLeaves = getLatestLeaves();
 
-    require(latestLeaves[0] == roots[0] && latestLeaves[1] == roots[1]);
+    require(latestLeaves[0] == newRoots[0] && latestLeaves[1] == newRoots[1]);
     require(tornToken.transfer(address(msg.sender), payout));
-
-    return true;
   }
 
 }

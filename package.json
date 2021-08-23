@@ -4,13 +4,13 @@
   "description": "A mechanism to reward  the Merkle root updaters for the withdrawal and deposit trees.",
   "main": "index.js",
   "scripts": {
-    "build": "scripts/buildCircuit.sh BatchTreeUpdate",
+    "build": "scripts/buildCircuits.sh BatchTreeUpdate",
     "genwitness": "scripts/buildWitness.sh BatchTreeUpdate",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/samgos/tornado-cash-merkle-root-auction.git"
+    "url": "git+https://git.com/samgos/tornado-cash-merkle-root-auction.git"
   },
   "author": "",
   "license": "ISC",
@@ -19,28 +19,28 @@
   },
   "homepage": "https://github.com/samgos/tornado-cash-merkle-root-auction#readme",
   "dependencies": {
-    "@openzeppelin/contracts-ethereum-package": "^2.2.3",
     "@openzeppelin/contracts": "^4.2.0",
+    "@openzeppelin/contracts-ethereum-package": "^2.2.3",
     "@openzeppelin/upgrades": "^2.8.0",
     "@types/jest": "^26.0.24",
     "@types/node": "^16.4.3"
   },
   "devDependencies": {
-    "circomlib": "git+https://github.com/tornadocash/circomlib.git#d20d53411d1bef61f38c99a8b36d5d0cc4836aa1",
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "@types/mocha": "^9.0.0",
     "circom": "0.5.42",
     "circom_runtime": "^0.1.12",
-    "@types/mocha": "^9.0.0",
+    "circomlib": "github:tornadocash/circomlib#d20d53411d1bef61f38c99a8b36d5d0cc4836aa1",
     "ethereum-waffle": "^3.4.0",
+    "ethers": "^5.4.2",
     "ffiasm": "^0.1.1",
     "ffjavascript": "^0.2.35",
     "fixed-merkle-tree": "^0.5.0",
-    "ethers": "^5.4.2",
     "hardhat": "^2.5.0",
-    "ts-node": "^10.1.0",
-    "typescript": "^4.3.5",
     "snarkjs": "^0.3.57",
-    "tmp-promise": "^3.0.2"
+    "tmp-promise": "^3.0.2",
+    "ts-node": "^10.1.0",
+    "typescript": "^4.3.5"
   }
 }
