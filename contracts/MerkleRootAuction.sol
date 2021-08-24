@@ -86,11 +86,11 @@ contract MerkleRootAuction {
 
   function updateRoots(
     bytes[2] calldata proofs,
-    bytes32[2] argsHashes,
-    bytes32[2] currentRoots,
-    bytes32[2] newRoot,
-    uint32[2] pathIndices,
-    TreeLeaf[2][CHUNK_SIZE] calldata events
+    bytes32[2] memory argsHashes,
+    bytes32[2] memory currentRoots,
+    bytes32[2] memory newRoots,
+    uint32[2] memory pathIndices,
+    TreeLeaf[CHUNK_SIZE][2] calldata events
   ) external returns (bool) {
     uint256 payout = reward(leavesUntilDeposit(pathIndices[0]), leavesUntilWithdrawal(pathIndices[1]));
     bytes32[2] memory latestLeaves = getLatestLeaves();

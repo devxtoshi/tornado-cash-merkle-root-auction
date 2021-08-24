@@ -2,8 +2,9 @@ import { toFixedHex, poseidonHash2, randomBN } from "../scripts/utils"
 import MerkleTree from "fixed-merkle-tree"
 import controller from "../scripts/controller"
 
-import { expect } from "hai"
-import { ethers } from "hardhat"
+import { expect } from "chai"
+import { ethers, web3, artifacts } from "hardhat"
+import fs from "fs"
 
 import { Signer, BigNumber } from "ethers"
 
@@ -15,7 +16,7 @@ const amount: BigNumber = (BigNumber.from(100)).mul(base)
 const PATH_TREE_UPDATE = "../artifacts/circuits/BatchTreeUpdate"
 const PATH_TREES = "contracts/interfaces/ITornadoTrees.sol:ITornadoTrees"
 const PATH_ERC = "contracts/interfaces/IERC20.sol:IERC20"
-const TREES_BLOCK_DEPLOY = 12143762
+const TREES_BLOCK_DEPLOY = 4912105
 const WITHDRAWAL = "WithdrawalData"
 
 const TREE = new MerkleTree(20, [], { hashFunction: poseidonHash2 })
@@ -26,25 +27,26 @@ interface Event {
   instance: String;
 }
 
-async function getPastEvents(endBlock, event): Event[] {
-  const tornadoTrees = await ethers.getContractAt(PATH_TREES, TORN_TREES_GOERLI)
+async function getPastEvents(endBlock, event): Promise<Event[]> {
+  const ITornadoTreesABI = artifacts.require("ITornadoTrees")
+  const TornadoTrees = new web3.eth.Contract(ITornadoTreesABI.abi, TORNADO_TREES_GOERLI)
 
-  const pastEvents: Event[]
-  const filteredEvents = await tornadoTrees.getPastEvents(event, {
+  const filteredEvents = await TornadoTrees.getPastEvents(event, {
     toBlock: !endBlock ? 'latest' : endBlock,
     fromBlock: TREES_BLOCK_DEPLOY,
   })
 
-  return await filteredEvents.map((e) =>
-    pastEvents.push({
-       instance: toFixedHex(e.args.instance, 20),
-       block: toFixedHex(e.args.block, 4),
-       hash: toFixedHex(e.args.hash),
+  return await filteredEvents.slice(0, 256).map((e) =>
+    ({
+       instance: toFixedHex(e.returnValues.instance, 20),
+       block: toFixedHex(e.returnValues.block, 4),
+       hash: toFixedHex(e.returnValues.hash),
     })
   )
  }
 
-async function generateProofs(withdrawalEvents, depositEvents): any[2][2] {
+
+async function generateProofs(withdrawalEvents, depositEvents): Promise<any[2][2]> {
    const snarkWithdrawals = controller.batchTreeUpdate(TREE, withdrawalEvents)
    const snarkDeposits = controller.batchTreeUpdate(TREE, depositEvents)
    const proofWithdrawals = await controller.prove(snarkWithdrawals.input, PATH_TREE_UPDATE)
@@ -52,7 +54,7 @@ async function generateProofs(withdrawalEvents, depositEvents): any[2][2] {
 
    return [
       [ proofDeposits, proofWithdrawals ],
-      [ snarkDepsoits.args, snarkWithdrawals.args ]
+      [ snarkDeposits.args, snarkWithdrawals.args ]
    ]
 }
 
@@ -97,14 +99,14 @@ describe('MerkleRootAuction', () => {
      const MerkleRootAuctionABI = await ethers.getContractFactory("MerkleRootAuction")
      const MerkleRootAuction = await MerkleRootAuctionABI.attach(AUCTION)
 
-     const withdrawalEvents = await getPastEvents(, "WithdrawalData")
-     const depositEvents = await getPastEvents(, "DepositData")
-     const parameters: Array
+     const deposits = await getPastEvents(null, "DepositData")
+     const withdrawals = await getPastEvents(null, "WithdrawalData")
+     const [ proofs, args ] = await generateProofs(withdrawals, deposits)
 
-     const [ proofs, args ] = await generateProofs(withdrawalEvents, depositEvents)
+     const parameters = await args[0].map((e, i) => [ e, args[1][i] ])
 
-     await args[0].map((e, i) => parameters.push([ e, args[1][i] ]))
+     const tx = await MerkleRootAuction.updateRoots(proofs, ...parameters)
 
-     await MerkleRootAuction.updateRoots(proofs, ...parameters)
+     console.log(tx.reciept)
    })
 })

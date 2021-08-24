@@ -1,4 +1,5 @@
 import "@nomiclabs/hardhat-waffle"
+import "@nomiclabs/hardhat-truffle5";
 
 import { HardhatUserConfig } from "hardhat/types"
 import { solConfig } from './scripts/constants'
@@ -19,6 +20,10 @@ const configuration: HardhatUserConfig = {
       },
       {
         version: "0.5.11",
+        settings: solConfig
+      },
+      {
+        version: "0.6.12",
         settings: solConfig
       },
       {
