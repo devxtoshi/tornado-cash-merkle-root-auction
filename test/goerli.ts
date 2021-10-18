@@ -4,6 +4,7 @@ import controller from "../scripts/controller"
 
 import { expect } from "chai"
 import { ethers, web3, artifacts } from "hardhat"
+import { poseidon } from "circomlib"
 import fs from "fs"
 
 import { Signer, BigNumber } from "ethers"
@@ -13,13 +14,16 @@ import { TORNADO_TREES_GOERLI, TEST_TORN, SABLIER, AUCTION } from "../scripts/co
 const base: BigNumber = BigNumber.from(10).pow(18)
 const amount: BigNumber = (BigNumber.from(100)).mul(base)
 
-const PATH_TREE_UPDATE = "../artifacts/circuits/BatchTreeUpdate"
+const PATH_TREE_UPDATE = "/home/alpha/tornado-cash-merkle-root-auction/artifacts/circuits/BatchTreeUpdate"
 const PATH_TREES = "contracts/interfaces/ITornadoTrees.sol:ITornadoTrees"
 const PATH_ERC = "contracts/interfaces/IERC20.sol:IERC20"
 const TREES_BLOCK_DEPLOY = 4912105
 const WITHDRAWAL = "WithdrawalData"
 
-const TREE = new MerkleTree(20, [], { hashFunction: poseidonHash2 })
+const poseidonHash = (items) => BigNumber.from(poseidon(items)).toString()
+
+let DEPOSIT_TREE = new MerkleTree(20, [], { hashFunction: poseidonHash2 })
+let WITHDRAWAL_TREE = new MerkleTree(20, [], { hashFunction: poseidonHash2 })
 
 interface Event {
   block: Number;
@@ -31,26 +35,37 @@ async function getPastEvents(endBlock, event): Promise<Event[]> {
   const ITornadoTreesABI = artifacts.require("ITornadoTrees")
   const TornadoTrees = new web3.eth.Contract(ITornadoTreesABI.abi, TORNADO_TREES_GOERLI)
 
-  const filteredEvents = await TornadoTrees.getPastEvents(event, {
+  let filteredEvents = await TornadoTrees.getPastEvents(event, {
     toBlock: !endBlock ? 'latest' : endBlock,
     fromBlock: TREES_BLOCK_DEPLOY,
   })
 
-  return await filteredEvents.slice(0, 256).map((e) =>
-    ({
+   return filteredEvents
+  .sort((a, b) => a.returnValues.index - b.returnValues.index)
+  .map((e) => {
        instance: toFixedHex(e.returnValues.instance, 20),
        block: toFixedHex(e.returnValues.block, 4),
        hash: toFixedHex(e.returnValues.hash),
-    })
-  )
+       leaf: poseidonHash([
+         e.returnValues.instance,
+         e.returnValues.block,
+         e.returnValues.hash
+       ])
+     }
+   )
  }
 
 
 async function generateProofs(withdrawalEvents, depositEvents): Promise<any[2][2]> {
-   const snarkWithdrawals = controller.batchTreeUpdate(TREE, withdrawalEvents)
-   const snarkDeposits = controller.batchTreeUpdate(TREE, depositEvents)
-   const proofWithdrawals = await controller.prove(snarkWithdrawals.input, PATH_TREE_UPDATE)
-   const proofDeposits = await controller.prove(snarkDeposits.input, PATH_TREE_UPDATE)
+   const snarkWithdrawals = controller.batchTreeUpdate(WITHDRAWAL_TREE, withdrawalEvents)
+   const snarkDeposits = controller.batchTreeUpdate(DEPOSIT_TREE, depositEvents)
+
+   const proofWithdrawals = await controller.prove(
+     snarkWithdrawals.input, PATH_TREE_UPDATE, "withdrawals"
+   )
+   const proofDeposits = await controller.prove(
+      snarkDeposits.input, PATH_TREE_UPDATE, "deposits"
+   )
 
    return [
       [ proofDeposits, proofWithdrawals ],
@@ -99,14 +114,21 @@ describe('MerkleRootAuction', () => {
      const MerkleRootAuctionABI = await ethers.getContractFactory("MerkleRootAuction")
      const MerkleRootAuction = await MerkleRootAuctionABI.attach(AUCTION)
 
-     const deposits = await getPastEvents(null, "DepositData")
-     const withdrawals = await getPastEvents(null, "WithdrawalData")
+     const deposits = await getPastEvents(null, "DepositData", true)
+     const withdrawals = await getPastEvents(null, "WithdrawalData", false)
+
      const [ proofs, args ] = await generateProofs(withdrawals, deposits)
+     const hexProofs = proofs.map(e => BigNumber.from(e).toHexString())
+
+     console.log('WITHDRAWAL PROOF:', hexProofs[0])
+     console.log('DEPOSIT PROOF:', hexProofs[1])
 
      const parameters = await args[0].map((e, i) => [ e, args[1][i] ])
 
-     const tx = await MerkleRootAuction.updateRoots(proofs, ...parameters)
-
+     const tx = await MerkleRootAuction.updateRoots(
+        hexProofs, ...parameters,
+        { gasLimit: 4200000 }
+      )
      console.log(tx.reciept)
    })
 })

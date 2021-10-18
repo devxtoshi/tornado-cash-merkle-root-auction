@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "build": "scripts/buildCircuits.sh BatchTreeUpdate",
-    "genwitness": "scripts/buildWitness.sh BatchTreeUpdate",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "genzkeys": "scripts/genZkeys.sh",
+    "test": "npx hardhat test --network goerli"
   },
   "repository": {
     "type": "git",
@@ -33,7 +33,7 @@
     "@nomiclabs/hardhat-web3": "^2.0.0",
     "@openzeppelin/upgrades-core": "^1.8.1",
     "@types/mocha": "^9.0.0",
-    "circom": "0.5.42",
+    "circom": "^0.5.46",
     "circom_runtime": "^0.1.12",
     "circomlib": "github:tornadocash/circomlib#d20d53411d1bef61f38c99a8b36d5d0cc4836aa1",
     "ethereum-waffle": "^3.4.0",
@@ -42,7 +42,7 @@
     "ffjavascript": "^0.2.35",
     "fixed-merkle-tree": "^0.5.0",
     "hardhat": "^2.5.0",
-    "snarkjs": "^0.3.57",
+    "snarkjs": "^0.4.7",
     "tmp-promise": "^3.0.2",
     "ts-node": "^10.1.0",
     "typescript": "^4.3.5",

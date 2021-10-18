@@ -112,7 +112,8 @@ contract MerkleRootAuction {
     latestLeaves = getLatestLeaves();
 
     require(latestLeaves[0] == newRoots[0] && latestLeaves[1] == newRoots[1]);
-    require(tornToken.transfer(address(msg.sender), payout));
+
+    return tornToken.transfer(address(msg.sender), payout);
   }
 
 }

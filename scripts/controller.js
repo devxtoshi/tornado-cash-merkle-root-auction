@@ -12,6 +12,23 @@ const tmp = require('tmp-promise')
 const util = require('util')
 const exec = util.promisify(require('child_process').exec)
 
+const formatProof = (
+    _proof
+) => {
+    return ([
+        _proof.pi_a[0],
+        _proof.pi_a[1],
+
+        _proof.pi_b[0][1],
+        _proof.pi_b[0][0],
+        _proof.pi_b[1][1],
+        _proof.pi_b[1][0],
+
+        _proof.pi_c[0],
+        _proof.pi_c[1],
+    ]).join("")
+}
+
 function hashInputs(input) {
   const sha = new jsSHA('SHA-256', 'ARRAYBUFFER')
   sha.update(toBuffer(input.oldRoot, 32))
@@ -31,41 +48,48 @@ function hashInputs(input) {
   return result
 }
 
-function prove(input, keyBasePath) {
+function prove(input, keyBasePath, label) {
   return tmp.dir().then(async (dir) => {
     dir = dir.path
     let out
 
+    fs.writeFileSync(`${dir}/${label}-input.json`, JSON.stringify(input, null, 2))
+
     try {
       if (fs.existsSync(`${keyBasePath}`)) {
         // native witness calc
-        fs.writeFileSync(`${dir}/input.json`, JSON.stringify(input, null, 2))
-        out = await exec(`${keyBasePath} ${dir}/input.json ${dir}/witness.json`)
+        out = await exec(`${keyBasePath} ${dir}/${label}-input.json ${dir}/witness.json`)
       } else {
-        await wtns.debug(
-          utils.unstringifyBigInts(input),
-          `${keyBasePath}.wasm`,
-          `${dir}/witness.wtns`,
-          `${keyBasePath}.sym`,
-          {},
-          console,
+
+        // snarkjs witness calc
+        // wont work natively (TODO)
+        await exec(
+          `snarkjs wtns debug `
+          + `${keyBasePath}.wasm `
+          + `${dir}/${label}-input.json `
+          + `${dir}/${label}.wtns `
+          + `${keyBasePath}.sym`
         )
-        const witness = utils.stringifyBigInts(await wtns.exportJson(`${dir}/witness.wtns`))
-        fs.writeFileSync(`${dir}/witness.json`, JSON.stringify(witness, null, 2))
+
+        const witness = utils.stringifyBigInts(await wtns.exportJson(`${dir}/${label}.wtns`))
+        fs.writeFileSync(`${dir}/${label}-witness.json`, JSON.stringify(witness, null, 2))
       }
       out = await exec(
-        `zkutil prove -c ${keyBasePath}.r1cs -p ${keyBasePath}.params -w ${dir}/witness.json -r ${dir}/proof.json -o ${dir}/public.json`,
+        `/home/alpha/rapidsnark/build/prover `
+        + `${keyBasePath}.zkey `
+        + `${dir}/${label}.wtns `
+        + `${dir}/${label}-proof.json `
+        + `${dir}/${label}-public.json`
       )
     } catch (e) {
       console.log(out, e)
       throw e
     }
-    return '0x' + JSON.parse(fs.readFileSync(`${dir}/proof.json`)).proof
+    return formatProof(JSON.parse(fs.readFileSync(`${dir}/${label}-proof.json`)))
   })
 }
 
 /**
- * Generates inputs for a snark and tornado trees smart contract.
  * This function updates MerkleTree argument
  *
  * @param tree Merkle tree with current smart contract state. This object is mutated during function execution.
