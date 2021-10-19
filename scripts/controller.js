@@ -98,6 +98,7 @@ function prove(input, keyBasePath, label) {
  */
 function batchTreeUpdate(tree, events) {
   const batchHeight = Math.log2(events.length)
+
   if (!Number.isInteger(batchHeight)) {
     throw new Error('events length has to be power of 2')
   }
@@ -134,29 +135,6 @@ function batchTreeUpdate(tree, events) {
     })),
   ]
   return { input, args }
-  // const proofData = await websnarkUtils.genWitnessAndProve(
-  //   this.groth16,
-  //   input,
-  //   this.provingKeys.batchTreeUpdateCircuit,
-  //   this.provingKeys.batchTreeUpdateProvingKey,
-  // )
-  // const { proof } = websnarkUtils.toSolidityInput(proofData)
-
-  // const args = [
-  //   toFixedHex(input.oldRoot),
-  //   toFixedHex(input.newRoot),
-  //   toFixedHex(input.pathIndices),
-  //   events.map((e) => ({
-  //     instance: toFixedHex(e.instance, 20),
-  //     hash: toFixedHex(e.hash),
-  //     block: toFixedHex(e.block),
-  //   })),
-  // ]
-
-  // return {
-  //   proof,
-  //   args,
-  // }
 }
 
 module.exports = { batchTreeUpdate, prove }

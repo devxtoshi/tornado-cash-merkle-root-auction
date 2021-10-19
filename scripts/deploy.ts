@@ -1,7 +1,7 @@
 import { run, ethers } from "hardhat"
 import { Signer } from "ethers"
 
-import { TORNADO_TREES_GOERLI, TEST_TORN } from "./constants"
+import { TORNADO_TREES_GOERLI, TEST_TORN } from "../scripts/constants"
 
 async function main() {
 

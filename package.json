@@ -4,9 +4,10 @@
   "description": "A mechanism to reward  the Merkle root updaters for the withdrawal and deposit trees.",
   "main": "index.js",
   "scripts": {
+    "deploy": "npx hardhat run --network goerli scripts/deploy.ts",
     "build": "scripts/buildCircuits.sh BatchTreeUpdate",
-    "genzkeys": "scripts/genZkeys.sh",
-    "test": "npx hardhat test --network goerli"
+    "test": "npx hardhat test --network goerli",
+    "genzkeys": "scripts/genZkeys.sh"
   },
   "repository": {
     "type": "git",

@@ -9,7 +9,7 @@ import fs from "fs"
 
 import { Signer, BigNumber } from "ethers"
 
-import { TORNADO_TREES_GOERLI, TEST_TORN, SABLIER, AUCTION } from "../scripts/constants"
+import { TORNADO_TREES_GOERLI, TEST_TORN, SABLIER, AUCTION, TREE_DEPTH, TREE_HEIGHT } from "../scripts/constants"
 
 const base: BigNumber = BigNumber.from(10).pow(18)
 const amount: BigNumber = (BigNumber.from(100)).mul(base)
@@ -18,45 +18,65 @@ const PATH_TREE_UPDATE = "/home/alpha/tornado-cash-merkle-root-auction/artifacts
 const PATH_TREES = "contracts/interfaces/ITornadoTrees.sol:ITornadoTrees"
 const PATH_ERC = "contracts/interfaces/IERC20.sol:IERC20"
 const TREES_BLOCK_DEPLOY = 4912105
-const WITHDRAWAL = "WithdrawalData"
 
-const poseidonHash = (items) => BigNumber.from(poseidon(items)).toString()
-
-let DEPOSIT_TREE = new MerkleTree(20, [], { hashFunction: poseidonHash2 })
-let WITHDRAWAL_TREE = new MerkleTree(20, [], { hashFunction: poseidonHash2 })
+const poseidonHash = (items) => BigNumber.from(poseidon(items)).toHexString()
+const poseidonHash2 = (a, b) => poseidonHash([a, b])
 
 interface Event {
   block: Number;
   hash: String;
   instance: String;
+  index: Number;
 }
 
-async function getPastEvents(endBlock, event): Promise<Event[]> {
+async function getPastEvents(event, targetLeaf): Promise<Event[]> {
   const ITornadoTreesABI = artifacts.require("ITornadoTrees")
   const TornadoTrees = new web3.eth.Contract(ITornadoTreesABI.abi, TORNADO_TREES_GOERLI)
 
-  let filteredEvents = await TornadoTrees.getPastEvents(event, {
-    toBlock: !endBlock ? 'latest' : endBlock,
+  let targetEvents = await TornadoTrees.getPastEvents(event, {
     fromBlock: TREES_BLOCK_DEPLOY,
+    toBlock: 'latest'
   })
 
-   return filteredEvents
+  let sortedEvents = targetEvents
   .sort((a, b) => a.returnValues.index - b.returnValues.index)
-  .map((e) => {
+  .map((e) => ({
        instance: toFixedHex(e.returnValues.instance, 20),
        block: toFixedHex(e.returnValues.block, 4),
        hash: toFixedHex(e.returnValues.hash),
-       leaf: poseidonHash([
-         e.returnValues.instance,
-         e.returnValues.block,
-         e.returnValues.hash
-       ])
-     }
+       index: e.returnValues.index
+     })
    )
+
+  const lastIndex = getMerkleIndex(sortedEvents, targetLeaf)
+  const pendingLeaves = sortedEvents.slice(lastIndex, sortedEvents.length)
+
+  return trimLeaves(pendingLeaves)
  }
 
+ function trimLeaves(pendingLeaves): Array<Event> {
+   const leavesPow = Math.log2(pendingLeaves.length)
+   const sufficientPow = Math.floor(leavesPow)
+   const trimmedLeaves = 2 ** sufficientPow
+   const leafDiff = pendingLeaves.length - trimmedLeaves
+
+   if(!Number.isInteger(leavesPow)){
+     return pendingLeaves.slice(0, pendingLeaves.length - leafDiff)
+   } else {
+     return pendingLeaves
+   }
+ }
+
+function getMerkleIndex(events, lastLeaf): number {
+  const targetEvent = events.find(e => e.index === lastLeaf.toString())
+  // const merkleTree = new MerkleTree(20, hashedEvents, { hashFunction: poseidonHash2 })
+
+  return events.indexOf(targetEvent)
+}
 
 async function generateProofs(withdrawalEvents, depositEvents): Promise<any[2][2]> {
+   const DEPOSIT_TREE = new MerkleTree(20, [], { hashFunction: poseidonHash2 })
+   const WITHDRAWAL_TREE = new MerkleTree(20, [], { hashFunction: poseidonHash2 })
    const snarkWithdrawals = controller.batchTreeUpdate(WITHDRAWAL_TREE, withdrawalEvents)
    const snarkDeposits = controller.batchTreeUpdate(DEPOSIT_TREE, depositEvents)
 
@@ -113,22 +133,35 @@ describe('MerkleRootAuction', () => {
   it('Update roots', async() => {
      const MerkleRootAuctionABI = await ethers.getContractFactory("MerkleRootAuction")
      const MerkleRootAuction = await MerkleRootAuctionABI.attach(AUCTION)
+     const TornadoTrees = await ethers.getContractAt(PATH_TREES, TORNADO_TREES_GOERLI)
+     const CHUNK_SIZE = 2 ** TREE_HEIGHT
 
-     const deposits = await getPastEvents(null, "DepositData", true)
-     const withdrawals = await getPastEvents(null, "WithdrawalData", false)
+     const lastProcessedWithdrawal = await TornadoTrees.lastProcessedWithdrawalLeaf()
+     const lastProcessedDeposit = await TornadoTrees.lastProcessedDepositLeaf()
 
-     const [ proofs, args ] = await generateProofs(withdrawals, deposits)
-     const hexProofs = proofs.map(e => BigNumber.from(e).toHexString())
+     const withdrawals = await getPastEvents("WithdrawalData", lastProcessedWithdrawal)
+     const deposits = await getPastEvents("DepositData", lastProcessedDeposit)
+     const totalEvents = withdrawals.length + deposits.length
+     const numBatches = (totalEvents / CHUNK_SIZE) - 1
 
-     console.log('WITHDRAWAL PROOF:', hexProofs[0])
-     console.log('DEPOSIT PROOF:', hexProofs[1])
+     for(var x = 0 ; x < /* numBatches */  1 * CHUNK_SIZE; x += CHUNK_SIZE){
+       const batchWithdrawals = withdrawals.slice(x, x + CHUNK_SIZE)
+       const batchDeposits = deposits.slice(x, x + CHUNK_SIZE)
 
-     const parameters = await args[0].map((e, i) => [ e, args[1][i] ])
+       const [ proofs, args ] = await generateProofs(batchDeposits, batchWithdrawals)
+       const hexProofs = proofs.map(e => BigNumber.from(e).toHexString())
 
-     const tx = await MerkleRootAuction.updateRoots(
-        hexProofs, ...parameters,
-        { gasLimit: 4200000 }
-      )
-     console.log(tx.reciept)
+       console.log('WITHDRAWAL PROOF:', hexProofs[0])
+       console.log('DEPOSIT PROOF:', hexProofs[1])
+
+       const parameters = await args[0].map((e, i) => [ e, args[1][i] ])
+
+       const tx = (await MerkleRootAuction.updateRoots(
+         hexProofs, ...parameters,
+         { gasLimit: 6750000 }
+       )).wait().then((reciept: any) => {
+         console.log(reciept.transactionHash)
+       })
+     }
    })
 })
