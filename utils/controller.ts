@@ -1,32 +1,46 @@
-const ethers = require('ethers')
-const BigNumber = ethers.BigNumber
-const { wtns } = require('snarkjs')
-const { utils } = require('ffjavascript')
+import { BigNumber } from "ethers"
+import { wtns } from "snarkjs"
+import { utils } from "ffjavascript"
+import { exec } from "child_process"
 
-const { bitsToNumber, toBuffer, toFixedHex, poseidonHash } = require('./utils')
+import jsSHA from 'jssha'
+import fs from "fs"
+import tmp from "tmp-promise"
+import util from "util"
 
-const jsSHA = require('jssha')
+import { bitsToNumber, toBuffer, toFixedHex, poseidonHash } from "./index"
 
-const fs = require('fs')
-const tmp = require('tmp-promise')
-const util = require('util')
-const exec = util.promisify(require('child_process').exec)
+const execute = util.promisify(exec)
+
+interface BatchTreeUpdate {
+  oldRoot: string;
+  newRoot: string;
+  pathIndices: Array<string>;
+  pathElements: Array<string>;
+  instances: Array<string>;
+  blocks: Array<string>;
+  hashes: Array<string>;
+  argsHash?: string;
+}
 
 const formatProof = (
-    _proof
+    proofPath
 ) => {
-    return ([
-        _proof.pi_a[0],
-        _proof.pi_a[1],
+  const source = fs.readFileSync(proofPath, "utf8")
+  const proof = JSON.parse(source)
 
-        _proof.pi_b[0][1],
-        _proof.pi_b[0][0],
-        _proof.pi_b[1][1],
-        _proof.pi_b[1][0],
+  return ([
+      proof.pi_a[0],
+      proof.pi_a[1],
 
-        _proof.pi_c[0],
-        _proof.pi_c[1],
-    ]).join("")
+      proof.pi_b[0][1],
+      proof.pi_b[0][0],
+      proof.pi_b[1][1],
+      proof.pi_b[1][0],
+
+      proof.pi_c[0],
+      proof.pi_c[1],
+  ]).join("")
 }
 
 function hashInputs(input) {
@@ -50,42 +64,41 @@ function hashInputs(input) {
 
 function prove(input, keyBasePath, label) {
   return tmp.dir().then(async (dir) => {
-    dir = dir.path
     let out
 
-    fs.writeFileSync(`${dir}/${label}-input.json`, JSON.stringify(input, null, 2))
+    fs.writeFileSync(`${dir.path}/${label}-input.json`, JSON.stringify(input, null, 2))
 
     try {
       if (fs.existsSync(`${keyBasePath}`)) {
         // native witness calc
-        out = await exec(`${keyBasePath} ${dir}/${label}-input.json ${dir}/witness.json`)
+        out = await execute(`${keyBasePath} ${dir.path}/${label}-input.json ${dir.path}/witness.json`)
       } else {
 
         // snarkjs witness calc
         // wont work natively (TODO)
-        await exec(
+        await execute(
           `snarkjs wtns debug `
           + `${keyBasePath}.wasm `
-          + `${dir}/${label}-input.json `
-          + `${dir}/${label}.wtns `
+          + `${dir.path}/${label}-input.json `
+          + `${dir.path}/${label}.wtns `
           + `${keyBasePath}.sym`
         )
 
-        const witness = utils.stringifyBigInts(await wtns.exportJson(`${dir}/${label}.wtns`))
-        fs.writeFileSync(`${dir}/${label}-witness.json`, JSON.stringify(witness, null, 2))
+        const witness = utils.stringifyBigInts(await wtns.exportJson(`${dir.path}/${label}.wtns`))
+        fs.writeFileSync(`${dir.path}/${label}-witness.json`, JSON.stringify(witness, null, 2))
       }
-      out = await exec(
+      out = await execute(
         `/home/alpha/rapidsnark/build/prover `
         + `${keyBasePath}.zkey `
-        + `${dir}/${label}.wtns `
-        + `${dir}/${label}-proof.json `
-        + `${dir}/${label}-public.json`
+        + `${dir.path}/${label}.wtns `
+        + `${dir.path}/${label}-proof.json `
+        + `${dir.path}/${label}-public.json`
       )
     } catch (e) {
       console.log(out, e)
       throw e
     }
-    return formatProof(JSON.parse(fs.readFileSync(`${dir}/${label}-proof.json`)))
+    return formatProof(`${dir.path}/${label}-proof.json`)
   })
 }
 
@@ -111,7 +124,7 @@ function batchTreeUpdate(tree, events) {
   pathElements = pathElements.slice(batchHeight).map((a) => BigNumber.from(a).toString())
   pathIndices = bitsToNumber(pathIndices.slice(batchHeight)).toString()
 
-  const input = {
+  const input: BatchTreeUpdate = {
     oldRoot,
     newRoot,
     pathIndices,
@@ -137,4 +150,4 @@ function batchTreeUpdate(tree, events) {
   return { input, args }
 }
 
-module.exports = { batchTreeUpdate, prove }
+export default { batchTreeUpdate, prove }

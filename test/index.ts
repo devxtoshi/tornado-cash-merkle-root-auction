@@ -1,26 +1,20 @@
-import { toFixedHex, poseidonHash2, randomBN } from "../scripts/utils"
-import MerkleTree from "fixed-merkle-tree"
-import controller from "../scripts/controller"
+import { toFixedHex, poseidonHash2, randomBN } from "../utils/index"
+import controller from "../utils/controller"
 
-import { expect } from "chai"
 import { ethers, web3, artifacts } from "hardhat"
+import { expect } from "chai"
 import { poseidon } from "circomlib"
 import fs from "fs"
 
 import { Signer, BigNumber } from "ethers"
+import MerkleTree from "fixed-merkle-tree"
 
-import { TORNADO_TREES_GOERLI, TEST_TORN, SABLIER, AUCTION, TREE_DEPTH, TREE_HEIGHT } from "../scripts/constants"
+import {
+    TREE_DEPTH, TREE_HEIGHT, TREES_BLOCK_DEPLOY, PATH_TREES, PATH_ARTIFACTS, PATH_ERC
+} from "../utils/constants"
 
 const base: BigNumber = BigNumber.from(10).pow(18)
 const amount: BigNumber = (BigNumber.from(100)).mul(base)
-
-const PATH_TREE_UPDATE = "/home/alpha/tornado-cash-merkle-root-auction/artifacts/circuits/BatchTreeUpdate"
-const PATH_TREES = "contracts/interfaces/ITornadoTrees.sol:ITornadoTrees"
-const PATH_ERC = "contracts/interfaces/IERC20.sol:IERC20"
-const TREES_BLOCK_DEPLOY = 4912105
-
-const poseidonHash = (items) => BigNumber.from(poseidon(items)).toHexString()
-const poseidonHash2 = (a, b) => poseidonHash([a, b])
 
 interface Event {
   block: Number;
@@ -30,8 +24,10 @@ interface Event {
 }
 
 async function getPastEvents(event, targetLeaf): Promise<Event[]> {
+  const treesAddress = process.env.TREES
+
   const ITornadoTreesABI = artifacts.require("ITornadoTrees")
-  const TornadoTrees = new web3.eth.Contract(ITornadoTreesABI.abi, TORNADO_TREES_GOERLI)
+  const TornadoTrees = new web3.eth.Contract(ITornadoTreesABI.abi, treesAddress)
 
   let targetEvents = await TornadoTrees.getPastEvents(event, {
     fromBlock: TREES_BLOCK_DEPLOY,
@@ -81,10 +77,10 @@ async function generateProofs(withdrawalEvents, depositEvents): Promise<any[2][2
    const snarkDeposits = controller.batchTreeUpdate(DEPOSIT_TREE, depositEvents)
 
    const proofWithdrawals = await controller.prove(
-     snarkWithdrawals.input, PATH_TREE_UPDATE, "withdrawals"
+     snarkWithdrawals.input, PATH_ARTIFACTS, "withdrawals"
    )
    const proofDeposits = await controller.prove(
-      snarkDeposits.input, PATH_TREE_UPDATE, "deposits"
+      snarkDeposits.input, PATH_ARTIFACTS, "deposits"
    )
 
    return [
@@ -94,25 +90,30 @@ async function generateProofs(withdrawalEvents, depositEvents): Promise<any[2][2
 }
 
 describe('MerkleRootAuction', () => {
+  const treesAddress = process.env.TREES
+  const tokenAddress = process.env.TOKEN
+  const sablierAddress = process.env.SABLIER
+  const auctionAddress = process.env.AUCTION
+
   let streamId: any
 
   it('Create stream', async() => {
     const latestBlockNumber = await ethers.provider.getBlockNumber()
     const latestBlock = await ethers.provider.getBlock(latestBlockNumber)
 
-    const IERC20ABI = await ethers.getContractAt(PATH_ERC, TEST_TORN)
+    const IERC20ABI = await ethers.getContractAt(PATH_ERC, tokenAddress)
     const SablierRateAdjusterABI = await ethers.getContractFactory("SablierRateAdjuster")
 
-    const SablierRateAdjuster = await SablierRateAdjusterABI.attach(SABLIER)
-    const TestToken = await IERC20ABI.attach(TEST_TORN)
+    const SablierRateAdjuster = await SablierRateAdjusterABI.attach(sablierAddress)
+    const TestToken = await IERC20ABI.attach(tokenAddress)
 
-    await TestToken.approve(SABLIER, amount)
+    await TestToken.approve(sablierAddress, amount)
 
     const startTime = latestBlock.timestamp + 600
     const endTime = startTime + 100000
 
     await (await SablierRateAdjuster.createStream(
-      AUCTION, amount, TEST_TORN, startTime, endTime,
+      auctionAddress, amount, tokenAddress, startTime, endTime,
       { gasLimit: 4200000 }
     )).wait().then((reciept: any) => {
       const { args }  = reciept.events[reciept.events.length-1]
@@ -125,15 +126,16 @@ describe('MerkleRootAuction', () => {
 
   it('Initialise stream', async() => {
     const MerkleRootAuctionABI = await ethers.getContractFactory("MerkleRootAuction")
-    const MerkleRootAuction = await MerkleRootAuctionABI.attach(AUCTION)
+    const MerkleRootAuction = await MerkleRootAuctionABI.attach(auctionAddress)
 
     await MerkleRootAuction.initialiseStream(streamId)
   })
 
   it('Update roots', async() => {
+
      const MerkleRootAuctionABI = await ethers.getContractFactory("MerkleRootAuction")
-     const MerkleRootAuction = await MerkleRootAuctionABI.attach(AUCTION)
-     const TornadoTrees = await ethers.getContractAt(PATH_TREES, TORNADO_TREES_GOERLI)
+     const MerkleRootAuction = await MerkleRootAuctionABI.attach(auctionAddress)
+     const TornadoTrees = await ethers.getContractAt(PATH_TREES, treesAddress)
      const CHUNK_SIZE = 2 ** TREE_HEIGHT
 
      const lastProcessedWithdrawal = await TornadoTrees.lastProcessedWithdrawalLeaf()

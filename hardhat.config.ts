@@ -1,17 +1,27 @@
 import "@nomiclabs/hardhat-waffle"
-import "@nomiclabs/hardhat-truffle5";
+import "@nomiclabs/hardhat-truffle5"
+
+import * as dotenv from "dotenv"
 
 import { HardhatUserConfig } from "hardhat/types"
-import { solConfig } from './scripts/constants'
+import { solConfig } from './utils/constants'
 import { task } from "hardhat/config"
 
-const configuration: HardhatUserConfig = {
-  networks: {
+dotenv.config({
+  path: `${__dirname}/.configuration.env`
+})
+
+const networks =
+!!process.env.RPC_ENDPOINT || !!process.env.PRIVATE_KEY ? {} : {
     goerli: {
-      url: `https://goerli.infura.io/v3/${INFURA_KEY}`,
-      accounts: [`0x${PRIVATE_KEY}`],
+      url: `${process.env.RPC_ENDPOINT}`,
+      accounts: [
+        `0x${process.env.PRIVATE_KEY}`
+      ],
     },
-  },
+  }
+
+const configuration: HardhatUserConfig = {
   solidity: {
     compilers: [
       {
@@ -34,7 +44,8 @@ const configuration: HardhatUserConfig = {
   },
   mocha: {
     timeout: 250000
-  }
+  },
+  networks
 }
 
 export default configuration
