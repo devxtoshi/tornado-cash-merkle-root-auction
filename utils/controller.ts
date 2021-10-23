@@ -88,7 +88,7 @@ function prove(input, keyBasePath, label) {
         fs.writeFileSync(`${dir.path}/${label}-witness.json`, JSON.stringify(witness, null, 2))
       }
       out = await execute(
-        `/home/alpha/rapidsnark/build/prover `
+        `${process.cwd()}/rapidsnark/build/prover `
         + `${keyBasePath}.zkey `
         + `${dir.path}/${label}.wtns `
         + `${dir.path}/${label}-proof.json `
