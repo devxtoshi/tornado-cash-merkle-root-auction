@@ -6,6 +6,7 @@
   "scripts": {
     "build": "scripts/buildCircuits.sh BatchTreeUpdate",
     "changeTreeHeight": "scripts/changeTreeHeight.sh",
+    "rapidsnark": "scripts/buildProver.sh",
     "genzkeys": "scripts/genZkeys.sh",
     "test": "npx hardhat test"
   },

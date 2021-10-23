@@ -11,21 +11,23 @@ dotenv.config({
   path: `${__dirname}/.configuration.env`
 })
 
-const networks =
-!!process.env.RPC_ENDPOINT || !!process.env.PRIVATE_KEY ? {} : {
+const configuration: HardhatUserConfig = {
+  networks: {
     goerli: {
       url: `${process.env.RPC_ENDPOINT}`,
       accounts: [
         `0x${process.env.PRIVATE_KEY}`
       ],
     },
-  }
-
-const configuration: HardhatUserConfig = {
+  },
   solidity: {
     compilers: [
       {
         version: "0.8.0",
+        settings: solConfig
+      },
+      {
+        version: "0.6.0",
         settings: solConfig
       },
       {
@@ -44,8 +46,7 @@ const configuration: HardhatUserConfig = {
   },
   mocha: {
     timeout: 250000
-  },
-  networks
+  }
 }
 
 export default configuration

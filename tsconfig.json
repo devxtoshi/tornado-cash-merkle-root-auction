@@ -21,6 +21,7 @@
   ],
   "include": [
     "types.d.ts",
+    "hre.d.ts",
     "utils/",
     "tests/"
   ],
