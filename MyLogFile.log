@@ -1,0 +1,174 @@
+Sat Oct 23 18:29:01 2021  [TRACE]: Start Initializing a b c A
+Sat Oct 23 18:29:01 2021  [TRACE]: Processing coefs
+Sat Oct 23 18:29:01 2021  [TRACE]: Calculating c
+Sat Oct 23 18:29:01 2021  [TRACE]: Initializing fft
+Sat Oct 23 18:29:01 2021  [TRACE]: Start iFFT A
+Sat Oct 23 18:29:02 2021  [TRACE]: a After ifft:
+Sat Oct 23 18:29:02 2021  [TRACE]: Start Shift A
+Sat Oct 23 18:29:02 2021  [TRACE]: a After shift:
+Sat Oct 23 18:29:02 2021  [TRACE]: Start FFT A
+Sat Oct 23 18:29:02 2021  [TRACE]: a After fft:
+Sat Oct 23 18:29:02 2021  [TRACE]: Start iFFT B
+Sat Oct 23 18:29:02 2021  [TRACE]: b After ifft:
+Sat Oct 23 18:29:02 2021  [TRACE]: Start Shift B
+Sat Oct 23 18:29:02 2021  [TRACE]: b After shift:
+Sat Oct 23 18:29:02 2021  [TRACE]: Start FFT B
+Sat Oct 23 18:29:03 2021  [TRACE]: b After fft:
+Sat Oct 23 18:29:03 2021  [TRACE]: Start iFFT C
+Sat Oct 23 18:29:03 2021  [TRACE]: c After ifft:
+Sat Oct 23 18:29:03 2021  [TRACE]: Start Shift C
+Sat Oct 23 18:29:03 2021  [TRACE]: c After shift:
+Sat Oct 23 18:29:03 2021  [TRACE]: Start FFT C
+Sat Oct 23 18:29:04 2021  [TRACE]: c After fft:
+Sat Oct 23 18:29:04 2021  [TRACE]: Start ABC
+Sat Oct 23 18:29:04 2021  [TRACE]: abc:
+Sat Oct 23 18:29:04 2021  [TRACE]: Start Multiexp H
+Sat Oct 23 18:29:09 2021  [TRACE]: Start Multiexp A
+Sat Oct 23 18:29:09 2021  [TRACE]: Start Multiexp B1
+Sat Oct 23 18:29:10 2021  [TRACE]: Start Multiexp B2
+Sat Oct 23 18:29:11 2021  [TRACE]: Start Multiexp C
+Sat Oct 23 18:29:38 2021  [TRACE]: Start Initializing a b c A
+Sat Oct 23 18:29:38 2021  [TRACE]: Processing coefs
+Sat Oct 23 18:29:38 2021  [TRACE]: Calculating c
+Sat Oct 23 18:29:38 2021  [TRACE]: Initializing fft
+Sat Oct 23 18:29:38 2021  [TRACE]: Start iFFT A
+Sat Oct 23 18:29:39 2021  [TRACE]: a After ifft:
+Sat Oct 23 18:29:39 2021  [TRACE]: Start Shift A
+Sat Oct 23 18:29:39 2021  [TRACE]: a After shift:
+Sat Oct 23 18:29:39 2021  [TRACE]: Start FFT A
+Sat Oct 23 18:29:39 2021  [TRACE]: a After fft:
+Sat Oct 23 18:29:39 2021  [TRACE]: Start iFFT B
+Sat Oct 23 18:29:40 2021  [TRACE]: b After ifft:
+Sat Oct 23 18:29:40 2021  [TRACE]: Start Shift B
+Sat Oct 23 18:29:40 2021  [TRACE]: b After shift:
+Sat Oct 23 18:29:40 2021  [TRACE]: Start FFT B
+Sat Oct 23 18:29:40 2021  [TRACE]: b After fft:
+Sat Oct 23 18:29:40 2021  [TRACE]: Start iFFT C
+Sat Oct 23 18:29:40 2021  [TRACE]: c After ifft:
+Sat Oct 23 18:29:40 2021  [TRACE]: Start Shift C
+Sat Oct 23 18:29:40 2021  [TRACE]: c After shift:
+Sat Oct 23 18:29:40 2021  [TRACE]: Start FFT C
+Sat Oct 23 18:29:41 2021  [TRACE]: c After fft:
+Sat Oct 23 18:29:41 2021  [TRACE]: Start ABC
+Sat Oct 23 18:29:41 2021  [TRACE]: abc:
+Sat Oct 23 18:29:41 2021  [TRACE]: Start Multiexp H
+Sat Oct 23 18:29:45 2021  [TRACE]: Start Multiexp A
+Sat Oct 23 18:29:45 2021  [TRACE]: Start Multiexp B1
+Sat Oct 23 18:29:45 2021  [TRACE]: Start Multiexp B2
+Sat Oct 23 18:29:46 2021  [TRACE]: Start Multiexp C
+Sat Oct 23 18:39:03 2021  [TRACE]: Start Initializing a b c A
+Sat Oct 23 18:39:03 2021  [TRACE]: Processing coefs
+Sat Oct 23 18:39:03 2021  [TRACE]: Calculating c
+Sat Oct 23 18:39:03 2021  [TRACE]: Initializing fft
+Sat Oct 23 18:39:03 2021  [TRACE]: Start iFFT A
+Sat Oct 23 18:39:04 2021  [TRACE]: a After ifft:
+Sat Oct 23 18:39:04 2021  [TRACE]: Start Shift A
+Sat Oct 23 18:39:04 2021  [TRACE]: a After shift:
+Sat Oct 23 18:39:04 2021  [TRACE]: Start FFT A
+Sat Oct 23 18:39:04 2021  [TRACE]: a After fft:
+Sat Oct 23 18:39:04 2021  [TRACE]: Start iFFT B
+Sat Oct 23 18:39:04 2021  [TRACE]: b After ifft:
+Sat Oct 23 18:39:04 2021  [TRACE]: Start Shift B
+Sat Oct 23 18:39:04 2021  [TRACE]: b After shift:
+Sat Oct 23 18:39:04 2021  [TRACE]: Start FFT B
+Sat Oct 23 18:39:05 2021  [TRACE]: b After fft:
+Sat Oct 23 18:39:05 2021  [TRACE]: Start iFFT C
+Sat Oct 23 18:39:05 2021  [TRACE]: c After ifft:
+Sat Oct 23 18:39:05 2021  [TRACE]: Start Shift C
+Sat Oct 23 18:39:05 2021  [TRACE]: c After shift:
+Sat Oct 23 18:39:05 2021  [TRACE]: Start FFT C
+Sat Oct 23 18:39:06 2021  [TRACE]: c After fft:
+Sat Oct 23 18:39:06 2021  [TRACE]: Start ABC
+Sat Oct 23 18:39:06 2021  [TRACE]: abc:
+Sat Oct 23 18:39:06 2021  [TRACE]: Start Multiexp H
+Sat Oct 23 18:39:09 2021  [TRACE]: Start Multiexp A
+Sat Oct 23 18:39:10 2021  [TRACE]: Start Multiexp B1
+Sat Oct 23 18:39:10 2021  [TRACE]: Start Multiexp B2
+Sat Oct 23 18:39:10 2021  [TRACE]: Start Multiexp C
+Sat Oct 23 18:39:35 2021  [TRACE]: Start Initializing a b c A
+Sat Oct 23 18:39:35 2021  [TRACE]: Processing coefs
+Sat Oct 23 18:39:35 2021  [TRACE]: Calculating c
+Sat Oct 23 18:39:35 2021  [TRACE]: Initializing fft
+Sat Oct 23 18:39:35 2021  [TRACE]: Start iFFT A
+Sat Oct 23 18:39:35 2021  [TRACE]: a After ifft:
+Sat Oct 23 18:39:35 2021  [TRACE]: Start Shift A
+Sat Oct 23 18:39:35 2021  [TRACE]: a After shift:
+Sat Oct 23 18:39:35 2021  [TRACE]: Start FFT A
+Sat Oct 23 18:39:36 2021  [TRACE]: a After fft:
+Sat Oct 23 18:39:36 2021  [TRACE]: Start iFFT B
+Sat Oct 23 18:39:36 2021  [TRACE]: b After ifft:
+Sat Oct 23 18:39:36 2021  [TRACE]: Start Shift B
+Sat Oct 23 18:39:36 2021  [TRACE]: b After shift:
+Sat Oct 23 18:39:36 2021  [TRACE]: Start FFT B
+Sat Oct 23 18:39:36 2021  [TRACE]: b After fft:
+Sat Oct 23 18:39:36 2021  [TRACE]: Start iFFT C
+Sat Oct 23 18:39:37 2021  [TRACE]: c After ifft:
+Sat Oct 23 18:39:37 2021  [TRACE]: Start Shift C
+Sat Oct 23 18:39:37 2021  [TRACE]: c After shift:
+Sat Oct 23 18:39:37 2021  [TRACE]: Start FFT C
+Sat Oct 23 18:39:37 2021  [TRACE]: c After fft:
+Sat Oct 23 18:39:37 2021  [TRACE]: Start ABC
+Sat Oct 23 18:39:37 2021  [TRACE]: abc:
+Sat Oct 23 18:39:37 2021  [TRACE]: Start Multiexp H
+Sat Oct 23 18:39:41 2021  [TRACE]: Start Multiexp A
+Sat Oct 23 18:39:41 2021  [TRACE]: Start Multiexp B1
+Sat Oct 23 18:39:41 2021  [TRACE]: Start Multiexp B2
+Sat Oct 23 18:39:42 2021  [TRACE]: Start Multiexp C
+Sat Oct 23 18:52:07 2021  [TRACE]: Start Initializing a b c A
+Sat Oct 23 18:52:07 2021  [TRACE]: Processing coefs
+Sat Oct 23 18:52:07 2021  [TRACE]: Calculating c
+Sat Oct 23 18:52:07 2021  [TRACE]: Initializing fft
+Sat Oct 23 18:52:07 2021  [TRACE]: Start iFFT A
+Sat Oct 23 18:52:07 2021  [TRACE]: a After ifft:
+Sat Oct 23 18:52:07 2021  [TRACE]: Start Shift A
+Sat Oct 23 18:52:07 2021  [TRACE]: a After shift:
+Sat Oct 23 18:52:07 2021  [TRACE]: Start FFT A
+Sat Oct 23 18:52:08 2021  [TRACE]: a After fft:
+Sat Oct 23 18:52:08 2021  [TRACE]: Start iFFT B
+Sat Oct 23 18:52:08 2021  [TRACE]: b After ifft:
+Sat Oct 23 18:52:08 2021  [TRACE]: Start Shift B
+Sat Oct 23 18:52:08 2021  [TRACE]: b After shift:
+Sat Oct 23 18:52:08 2021  [TRACE]: Start FFT B
+Sat Oct 23 18:52:08 2021  [TRACE]: b After fft:
+Sat Oct 23 18:52:08 2021  [TRACE]: Start iFFT C
+Sat Oct 23 18:52:09 2021  [TRACE]: c After ifft:
+Sat Oct 23 18:52:09 2021  [TRACE]: Start Shift C
+Sat Oct 23 18:52:09 2021  [TRACE]: c After shift:
+Sat Oct 23 18:52:09 2021  [TRACE]: Start FFT C
+Sat Oct 23 18:52:09 2021  [TRACE]: c After fft:
+Sat Oct 23 18:52:09 2021  [TRACE]: Start ABC
+Sat Oct 23 18:52:09 2021  [TRACE]: abc:
+Sat Oct 23 18:52:09 2021  [TRACE]: Start Multiexp H
+Sat Oct 23 18:52:12 2021  [TRACE]: Start Multiexp A
+Sat Oct 23 18:52:13 2021  [TRACE]: Start Multiexp B1
+Sat Oct 23 18:52:13 2021  [TRACE]: Start Multiexp B2
+Sat Oct 23 18:52:13 2021  [TRACE]: Start Multiexp C
+Sat Oct 23 18:52:37 2021  [TRACE]: Start Initializing a b c A
+Sat Oct 23 18:52:37 2021  [TRACE]: Processing coefs
+Sat Oct 23 18:52:37 2021  [TRACE]: Calculating c
+Sat Oct 23 18:52:37 2021  [TRACE]: Initializing fft
+Sat Oct 23 18:52:37 2021  [TRACE]: Start iFFT A
+Sat Oct 23 18:52:37 2021  [TRACE]: a After ifft:
+Sat Oct 23 18:52:37 2021  [TRACE]: Start Shift A
+Sat Oct 23 18:52:37 2021  [TRACE]: a After shift:
+Sat Oct 23 18:52:37 2021  [TRACE]: Start FFT A
+Sat Oct 23 18:52:38 2021  [TRACE]: a After fft:
+Sat Oct 23 18:52:38 2021  [TRACE]: Start iFFT B
+Sat Oct 23 18:52:38 2021  [TRACE]: b After ifft:
+Sat Oct 23 18:52:38 2021  [TRACE]: Start Shift B
+Sat Oct 23 18:52:38 2021  [TRACE]: b After shift:
+Sat Oct 23 18:52:38 2021  [TRACE]: Start FFT B
+Sat Oct 23 18:52:38 2021  [TRACE]: b After fft:
+Sat Oct 23 18:52:38 2021  [TRACE]: Start iFFT C
+Sat Oct 23 18:52:39 2021  [TRACE]: c After ifft:
+Sat Oct 23 18:52:39 2021  [TRACE]: Start Shift C
+Sat Oct 23 18:52:39 2021  [TRACE]: c After shift:
+Sat Oct 23 18:52:39 2021  [TRACE]: Start FFT C
+Sat Oct 23 18:52:39 2021  [TRACE]: c After fft:
+Sat Oct 23 18:52:39 2021  [TRACE]: Start ABC
+Sat Oct 23 18:52:39 2021  [TRACE]: abc:
+Sat Oct 23 18:52:39 2021  [TRACE]: Start Multiexp H
+Sat Oct 23 18:52:42 2021  [TRACE]: Start Multiexp A
+Sat Oct 23 18:52:43 2021  [TRACE]: Start Multiexp B1
+Sat Oct 23 18:52:43 2021  [TRACE]: Start Multiexp B2
+Sat Oct 23 18:52:43 2021  [TRACE]: Start Multiexp C

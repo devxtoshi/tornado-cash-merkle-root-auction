@@ -109,10 +109,6 @@ contract MerkleRootAuction {
       ), "Failure to withdraw stream balance"
     );
 
-    latestLeaves = getLatestLeaves();
-
-    require(latestLeaves[0] == newRoots[0] && latestLeaves[1] == newRoots[1]);
-
     return tornToken.transfer(address(msg.sender), payout);
   }
 

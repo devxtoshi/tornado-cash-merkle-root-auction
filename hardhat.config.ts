@@ -12,14 +12,7 @@ dotenv.config({
 })
 
 const configuration: HardhatUserConfig = {
-  networks: {
-    goerli: {
-      url: `${process.env.RPC_ENDPOINT}`,
-      accounts: [
-        `0x${process.env.PRIVATE_KEY}`
-      ],
-    },
-  },
+  defaultNetwork: "hardhat",
   solidity: {
     compilers: [
       {
@@ -27,7 +20,7 @@ const configuration: HardhatUserConfig = {
         settings: solConfig
       },
       {
-        version: "0.6.0",
+        version: "0.6.12",
         settings: solConfig
       },
       {
@@ -44,8 +37,14 @@ const configuration: HardhatUserConfig = {
       }
     ],
   },
+  networks: {
+    hardhat: {
+      blockGasLimit: 95000000,
+      allowUnlimitedContractSize: true
+    }
+  },
   mocha: {
-    timeout: 250000
+    timeout: 600000
   }
 }
 

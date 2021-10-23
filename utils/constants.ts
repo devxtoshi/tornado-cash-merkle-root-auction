@@ -11,6 +11,6 @@ export const TREE_DEPTH = 20
 export const solConfig  = {
     optimizer: {
       enabled: true,
-      runs: 1000,
+      runs: 200,
     }
  }
