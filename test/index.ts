@@ -148,6 +148,7 @@ describe("Tornado Cash Merkle Root Auction", () => {
   let streamId: number
 
   it("Deployments", async() => {
+    const BatchTreeUpdateVerifierABI = await ethers.getContractFactory("BatchTreeUpdateVerifier")
     const SablierRateAdjusterABI = await ethers.getContractFactory("SablierRateAdjuster")
     const MerkleRootAuctionABI = await ethers.getContractFactory("MerkleRootAuction")
     const TornadoTreesV1ABI = await ethers.getContractFactory("TornadoTreesV1")
@@ -168,6 +169,9 @@ describe("Tornado Cash Merkle Root Auction", () => {
       let contractAddress: string
 
       if(isLocalDeployment) {
+        const BatchTreeUpdateVerifier = await BatchTreeUpdateVerifierABI.deploy()
+        await BatchTreeUpdateVerifier.deployed()
+
         const TornadoTreesV1 = await TornadoTreesV1ABI.deploy(0, 0, tree.root(), tree.root())
         await TornadoTreesV1.deployed()
 
@@ -182,7 +186,7 @@ describe("Tornado Cash Merkle Root Auction", () => {
         })
         await TornadoTrees.deployed()
 
-        await TornadoTrees.initialize(account.address)
+        await TornadoTrees.initialize(account.address, BatchTreeUpdateVerifier.address)
 
         contractAddress = TornadoTrees.address.toString()
       } else {

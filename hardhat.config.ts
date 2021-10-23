@@ -20,10 +20,6 @@ const configuration: HardhatUserConfig = {
         settings: solConfig
       },
       {
-        version: "0.6.12",
-        settings: solConfig
-      },
-      {
         version: "0.5.11",
         settings: solConfig
       },

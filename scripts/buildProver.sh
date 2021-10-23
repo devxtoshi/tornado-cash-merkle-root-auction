@@ -1,3 +1,5 @@
+#!/bin/bash -e
+
 # dependencies
 sudo apt install build-essential
 sudo apt-get install libgmp-dev
