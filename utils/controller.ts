@@ -2,6 +2,7 @@ import { BigNumber } from "ethers"
 import { wtns } from "snarkjs"
 import { utils } from "ffjavascript"
 import { exec } from "child_process"
+import { ethers } from "hardhat"
 
 import jsSHA from 'jssha'
 import fs from "fs"
@@ -29,18 +30,22 @@ const formatProof = (
   const source = fs.readFileSync(proofPath, "utf8")
   const proof = JSON.parse(source)
 
-  return ([
-      proof.pi_a[0],
-      proof.pi_a[1],
+  return ethers.utils.defaultAbiCoder.encode(
+    ["uint256[8]" ], [
+      [
+        proof.pi_a[0],
+        proof.pi_a[1],
 
-      proof.pi_b[0][1],
-      proof.pi_b[0][0],
-      proof.pi_b[1][1],
-      proof.pi_b[1][0],
+        proof.pi_b[0][1],
+        proof.pi_b[0][0],
+        proof.pi_b[1][1],
+        proof.pi_b[1][0],
 
-      proof.pi_c[0],
-      proof.pi_c[1],
-  ]).join("")
+        proof.pi_c[0],
+        proof.pi_c[1]
+      ]
+    ]
+  )
 }
 
 function hashInputs(input) {

@@ -33,15 +33,16 @@ interface Event {
   block: Number;
   hash: String;
   instance: String;
-  index: Number;
+  index?: Number;
 }
 
 async function getPastEvents(event, targetLeaf, treesAddress): Promise<Event[]> {
   const ITornadoTreesABI = artifacts.require("ITornadoTrees")
   const TornadoTrees = new web3.eth.Contract(ITornadoTreesABI.abi, treesAddress)
+  const isLocalDeployment = !config.networks.goerli
 
   let targetEvents = await TornadoTrees.getPastEvents(event, {
-    fromBlock: TREES_BLOCK_DEPLOY,
+    fromBlock: isLocalDeployment ? 0 : TREES_BLOCK_DEPLOY,
     toBlock: 'latest'
   })
 
@@ -50,8 +51,7 @@ async function getPastEvents(event, targetLeaf, treesAddress): Promise<Event[]> 
   .map((e) => ({
        instance: toFixedHex(e.returnValues.instance, 20),
        block: toFixedHex(e.returnValues.block, 4),
-       hash: toFixedHex(e.returnValues.hash),
-       index: e.returnValues.index
+       hash: toFixedHex(e.returnValues.hash)
      })
    )
 
@@ -81,9 +81,9 @@ function getMerkleIndex(events, lastLeaf): number {
   return events.indexOf(targetEvent)
 }
 
-async function generateProofs(withdrawalEvents, depositEvents): Promise<any[2][2]> {
-   const DEPOSIT_TREE = new MerkleTree(20, [], { hashFunction: poseidonHash2 })
-   const WITHDRAWAL_TREE = new MerkleTree(20, [], { hashFunction: poseidonHash2 })
+async function generateProofs(depositEvents, withdrawalEvents): Promise<any[2][2]> {
+   const DEPOSIT_TREE = new MerkleTree(TREE_DEPTH, [], { hashFunction: poseidonHash2 })
+   const WITHDRAWAL_TREE = new MerkleTree(TREE_DEPTH, [], { hashFunction: poseidonHash2 })
    const snarkWithdrawals = controller.batchTreeUpdate(WITHDRAWAL_TREE, withdrawalEvents)
    const snarkDeposits = controller.batchTreeUpdate(DEPOSIT_TREE, depositEvents)
 
@@ -101,7 +101,7 @@ async function generateProofs(withdrawalEvents, depositEvents): Promise<any[2][2
 }
 
 async function register(note, tornadoTreesV1) {
-  await tornadoTreesV1.register(
+  return tornadoTreesV1.register(
     note.instance,
     toFixedHex(note.commitment),
     toFixedHex(note.nullifierHash),
@@ -138,9 +138,17 @@ async function createMockCommitments(tornadoTreesV1) {
       block: toFixedHex(notes[i].withdrawalBlock, 4),
     }
   }
+
+  return [
+    depositEvents, withdrawalEvents
+  ]
 }
 
 describe("Tornado Cash Merkle Root Auction", () => {
+  const isLocalDeployment = !config.networks.goerli
+
+  let withdrawalEvents: Array<Event>
+  let depositEvents: Array<Event>
   let treesAddress: string
   let tokenAddress: string
   let sablierAddress: string
@@ -151,13 +159,13 @@ describe("Tornado Cash Merkle Root Auction", () => {
     const BatchTreeUpdateVerifierABI = await ethers.getContractFactory("BatchTreeUpdateVerifier")
     const SablierRateAdjusterABI = await ethers.getContractFactory("SablierRateAdjuster")
     const MerkleRootAuctionABI = await ethers.getContractFactory("MerkleRootAuction")
+    const TornadoTreesMockABI = await ethers.getContractFactory("TornadoTreesMock")
     const TornadoTreesV1ABI = await ethers.getContractFactory("TornadoTreesV1")
     const TornadoTreesABI = await ethers.getContractFactory("TornadoTrees")
     const TestTokenABI = await ethers.getContractFactory("TestToken")
 
     try {
       const tree = new MerkleTree(TREE_DEPTH, [], { hashFunction: poseidonHash2 })
-      const isLocalDeployment = !config.networks.goerli
       const [ account ] = await ethers.getSigners()
 
       const TestToken = await TestTokenABI.deploy()
@@ -175,9 +183,11 @@ describe("Tornado Cash Merkle Root Auction", () => {
         const TornadoTreesV1 = await TornadoTreesV1ABI.deploy(0, 0, tree.root(), tree.root())
         await TornadoTreesV1.deployed()
 
-        await createMockCommitments(TornadoTreesV1)
+        const [ deposits, withdrawals ] = await createMockCommitments(TornadoTreesV1)
+        const lastWithdrawalLeaf = await TornadoTreesV1.withdrawals(withdrawals.length - 1)
+        const lastDepositLeaf = await TornadoTreesV1.deposits(deposits.length - 1)
 
-        const TornadoTrees = await TornadoTreesABI.deploy(
+        const TornadoTrees = await TornadoTreesMockABI.deploy(
           account.address, TornadoTreesV1.address, {
             depositsFrom: 1,
             depositsStep: 1,
@@ -185,10 +195,11 @@ describe("Tornado Cash Merkle Root Auction", () => {
             withdrawalsStep: 2
         })
         await TornadoTrees.deployed()
-
         await TornadoTrees.initialize(account.address, BatchTreeUpdateVerifier.address)
 
         contractAddress = TornadoTrees.address.toString()
+        withdrawalEvents = withdrawals
+        depositEvents = deposits
       } else {
         contractAddress = TORNADO_TREES
       }
@@ -208,8 +219,6 @@ describe("Tornado Cash Merkle Root Auction", () => {
   })
 
   it('Create stream', async() => {
-    console.log(treesAddress)
-
     const latestBlockNumber = await ethers.provider.getBlockNumber()
     const latestBlock = await ethers.provider.getBlock(latestBlockNumber)
 
@@ -245,36 +254,45 @@ describe("Tornado Cash Merkle Root Auction", () => {
   it('Update roots', async() => {
     const MerkleRootAuctionABI = await ethers.getContractFactory("MerkleRootAuction")
     const MerkleRootAuction = await MerkleRootAuctionABI.attach(auctionAddress)
-    const TornadoTreesABI = await ethers.getContractFactory("TornadoTrees")
+    const TornadoTreesABI = await ethers.getContractFactory("TornadoTreesMock")
     const TornadoTrees = await TornadoTreesABI.attach(treesAddress)
     const CHUNK_SIZE = 2 ** TREE_HEIGHT
 
     const lastProcessedWithdrawal = await TornadoTrees.lastProcessedWithdrawalLeaf()
     const lastProcessedDeposit = await TornadoTrees.lastProcessedDepositLeaf()
 
-    const withdrawals = await getPastEvents("WithdrawalData", lastProcessedWithdrawal, treesAddress)
-    const deposits = await getPastEvents("DepositData", lastProcessedDeposit, treesAddress)
-    const totalEvents = withdrawals.length + deposits.length
+    if(!isLocalDeployment) {
+      withdrawalEvents = await getPastEvents("WithdrawalData", lastProcessedWithdrawal, treesAddress)
+      depositEvents = await getPastEvents("DepositData", lastProcessedDeposit, treesAddress)
+    }
+
+    const totalEvents = withdrawalEvents.length + depositEvents.length
     const numBatches = (totalEvents / CHUNK_SIZE) - 1
 
     for(var x = 0 ; x < /* numBatches */  1 * CHUNK_SIZE; x += CHUNK_SIZE){
-      const batchWithdrawals = withdrawals.slice(x, x + CHUNK_SIZE)
-      const batchDeposits = deposits.slice(x, x + CHUNK_SIZE)
+      const batchWithdrawals = withdrawalEvents.slice(x, x + CHUNK_SIZE)
+      const batchDeposits = depositEvents.slice(x, x + CHUNK_SIZE)
 
       const [ proofs, args ] = await generateProofs(batchDeposits, batchWithdrawals)
-      const hexProofs = proofs.map(e => BigNumber.from(e).toHexString())
 
-      // console.log('WITHDRAWAL PROOF:', hexProofs[0])
-      // console.log('DEPOSIT PROOF:', hexProofs[1])
+      console.log('DEPOSIT PROOF:', proofs[0])
+      console.log('WITHDRAWAL PROOF:', proofs[1])
 
       const parameters = await args[0].map((e, i) => [ e, args[1][i] ])
 
-      const tx = (await MerkleRootAuction.updateRoots(
-        hexProofs, ...parameters,
-        { gasLimit: 6750000 }
-      )).wait().then((reciept: any) => {
-        console.log(reciept.transactionHash)
-      })
+      console.log('UPDATING TREE')
+
+      await TornadoTrees.updateDepositTree(
+        proofs[0],
+        ...args[0]
+      )
+
+      // const tx = (await MerkleRootAuction.updateRoots(
+      //  hexProofs, ...parameters,
+      //  { gasLimit: 9500000 }
+      //)).wait().then((reciept: any) => {
+      //  console.log(reciept.transactionHash)
+      //})
     }
   })
 

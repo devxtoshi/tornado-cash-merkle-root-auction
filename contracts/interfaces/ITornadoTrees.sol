@@ -41,6 +41,10 @@ interface ITornadoTrees {
 
   function deposits(uint256 i) external view returns (bytes32);
 
+  function withdrawalRoot() external view returns (bytes32);
+
+  function depositRoot() external view returns (bytes32);
+
   event DepositData(address instance, bytes32 indexed hash, uint256 block, uint256 index);
 
   event WithdrawalData(address instance, bytes32 indexed hash, uint256 block, uint256 index);

@@ -11,12 +11,15 @@ dotenv.config({
   path: `${__dirname}/.configuration.env`
 })
 
-const configuration: HardhatUserConfig = {
-  defaultNetwork: "hardhat",
+let configuration: HardhatUserConfig = {
   solidity: {
     compilers: [
       {
         version: "0.8.0",
+        settings: solConfig
+      },
+      {
+        version: "0.6.0",
         settings: solConfig
       },
       {
@@ -33,14 +36,17 @@ const configuration: HardhatUserConfig = {
       }
     ],
   },
-  networks: {
-    hardhat: {
-      blockGasLimit: 95000000,
-      allowUnlimitedContractSize: true
-    }
-  },
   mocha: {
-    timeout: 600000
+    timeout: 250000
+  }
+}
+
+if(process.env.NETWORK){
+  configuration[process.env.NETWORK] = {
+    url: `${process.env.RPC_ENDPOINT}`,
+    accounts: [
+      `0x${process.env.PRIVATE_KEY}`
+    ]
   }
 }
 
