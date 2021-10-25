@@ -290,6 +290,8 @@ contract Sablier is IERC1620, Exponential, ReentrancyGuard {
 
         require(IERC20(stream.tokenAddress).transfer(stream.recipient, amount), "token transfer failure");
         emit WithdrawFromStream(streamId, stream.recipient, amount);
+
+        return true;
     }
 
     /**
@@ -319,5 +321,7 @@ contract Sablier is IERC1620, Exponential, ReentrancyGuard {
         if (senderBalance > 0) require(token.transfer(stream.sender, senderBalance), "sender token transfer failure");
 
         emit CancelStream(streamId, stream.sender, stream.recipient, senderBalance, recipientBalance);
+
+        return true;
     }
 }

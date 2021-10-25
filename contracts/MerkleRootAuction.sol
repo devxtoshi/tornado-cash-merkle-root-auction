@@ -74,33 +74,33 @@ contract MerkleRootAuction {
      ];
   }
 
-  function reward(uint256 deposits, uint256 withdrawals) public view returns (uint256 reward) {
+  function reward(uint256 deposits, uint256 withdrawals) public view returns (uint256) {
     uint256 streamBalance = merkleStream.balanceOf(merkleStreamId, address(this));
     uint256 auctionBalance = tornToken.balanceOf(address(this));
-    uint256 queryFufilment  = (withdrawals + deposits) * BASE18;
-    uint256 totalFufilment = queryFufilment / pendingLeaves();
     uint256 rewardBalance = streamBalance + auctionBalance;
 
-    reward = (rewardBalance * totalFufilment) / BASE18;
+    uint256 queryFufilment  = (withdrawals + deposits) * BASE18;
+    uint256 totalFufilment = queryFufilment / pendingLeaves();
+
+    if(deposits > uint256(0) || withdrawals > uint256(0)){
+      return (rewardBalance * totalFufilment) / BASE18;
+    } else {
+      return rewardBalance;
+    }
   }
 
   function updateRoots(
-    bytes[2] calldata proofs,
-    bytes32[2] memory argsHashes,
-    bytes32[2] memory currentRoots,
-    bytes32[2] memory newRoots,
-    uint32[2] memory pathIndices,
-    TreeLeaf[CHUNK_SIZE][2] calldata events
+    bytes calldata depositsParams,
+    uint32 depositsPathIndices,
+    bytes calldata withdrawalsParams,
+    uint32 withdrawalsPathIndices
   ) external returns (bool) {
-    uint256 payout = reward(leavesUntilDeposit(pathIndices[0]), leavesUntilWithdrawal(pathIndices[1]));
+    uint256 leavesDeposits = leavesUntilDeposit(depositsPathIndices);
+    uint256 leavesWithdrawals = leavesUntilWithdrawal(withdrawalsPathIndices);
+    uint256 payout = reward(leavesDeposits, leavesWithdrawals);
 
-    tornadoTrees.updateDepositTree(
-      proofs[0], argsHashes[0], currentRoots[0], newRoots[0], pathIndices[0], events[0]
-    );
-
-    tornadoTrees.updateWithdrawalTree(
-      proofs[1], argsHashes[1], currentRoots[1], newRoots[1], pathIndices[1], events[1]
-    );
+    address(tornadoTrees).call(depositsParams);
+    address(tornadoTrees).call(withdrawalsParams);
 
     require(
       merkleStream.withdrawFromStream(

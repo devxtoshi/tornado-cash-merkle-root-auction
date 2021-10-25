@@ -15,7 +15,9 @@ import {
 } from "../utils/constants"
 
 const base: BigNumber = BigNumber.from(10).pow(18)
-const amount: BigNumber = (BigNumber.from(100)).mul(base)
+const amount: BigNumber = (BigNumber.from(10000)).mul(base)
+
+const sleep = (t) => new Promise(r => setTimeout(r, t))
 
 const mock = {
   instances: [
@@ -34,6 +36,14 @@ interface Event {
   hash: String;
   instance: String;
   index?: Number;
+}
+
+async function timeTravel(time) {
+  const latestBlockNumber = await ethers.provider.getBlockNumber()
+  const latestBlock = await ethers.provider.getBlock(latestBlockNumber)
+
+  await ethers.provider.send('evm_setNextBlockTimestamp', [ latestBlock.timestamp + time ])
+  await ethers.provider.send('evm_mine', [])
 }
 
 async function getPastEvents(event, targetLeaf, treesAddress): Promise<Event[]> {
@@ -146,6 +156,15 @@ async function createMockCommitments(tornadoTreesV1, proxy) {
   ]
 }
 
+export function hashProofParams(contract, functionName, proof, args)  {
+  return contract.interface.encodeFunctionData(
+    functionName, [
+      proof,
+      ...args
+    ]
+  )
+}
+
 describe("Tornado Cash Merkle Root Auction", () => {
   const isLocalDeployment = !config.networks.goerli
 
@@ -234,11 +253,10 @@ describe("Tornado Cash Merkle Root Auction", () => {
     await TestToken.approve(sablierAddress, amount)
 
     const startTime = latestBlock.timestamp + 600
-    const endTime = startTime + 100000
+    const endTime = startTime + 1000000
 
     await (await SablierRateAdjuster.createStream(
       auctionAddress, amount, tokenAddress, startTime, endTime,
-      { gasLimit: 4200000 }
     )).wait().then((reciept: any) => {
         const { args }  = reciept.events[reciept.events.length-1]
         const id = args[args.length-7].toNumber()
@@ -252,6 +270,7 @@ describe("Tornado Cash Merkle Root Auction", () => {
     const MerkleRootAuction = await MerkleRootAuctionABI.attach(auctionAddress)
 
     await MerkleRootAuction.initialiseStream(streamId)
+    await timeTravel(86400)
   })
 
   it('Update roots', async() => {
@@ -277,18 +296,14 @@ describe("Tornado Cash Merkle Root Auction", () => {
       const batchDeposits = depositEvents.slice(x, x + CHUNK_SIZE)
 
       const [ proofs, args ] = await generateProofs(batchDeposits, batchWithdrawals)
-      const parameters = await args[0].map((e, i) => [ e, args[1][i] ])
+      const [ depositsPathIndices, withdrawalsPathIndices ] = [ args[0][3], args[1][3] ]
 
-      console.log('DEPOSIT PROOF:', proofs[0])
-      console.log('WITHDRAWAL PROOF:', proofs[1])
+      const withdrawalsParams = hashProofParams(TornadoTrees, "updateWithdrawalTree", proofs[1], args[1])
+      const depositsParams = hashProofParams(TornadoTrees, "updateDepositTree", proofs[0], args[0])
 
-      // Conflict passing params in memory arrays to the evem
-      // TODO encode params for both trees to two hashes
-
-      // await MerkleRootAuction.updateRoots(proofs, ...parameters)
-
-      await TornadoTrees.updateDepositTree(proofs[0], ...args[0])
-      await TornadoTrees.updateWithdrawalTree(proofs[1], ...args[1])
+      await MerkleRootAuction.updateRoots(
+        depositsParams, depositsPathIndices, withdrawalsParams, withdrawalsPathIndices
+      )
     }
   })
 
