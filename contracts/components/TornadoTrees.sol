@@ -70,19 +70,8 @@ contract TornadoTrees is Initializable {
     governance = _governance;
     tornadoTreesV1 = _tornadoTreesV1;
 
-    depositsV1Length = findArrayLength(
-      _tornadoTreesV1,
-      "deposits(uint256)",
-      _searchParams.depositsFrom,
-      _searchParams.depositsStep
-    );
-
-    withdrawalsV1Length = findArrayLength(
-      _tornadoTreesV1,
-      "withdrawals(uint256)",
-      _searchParams.withdrawalsFrom,
-      _searchParams.withdrawalsStep
-    );
+    depositsV1Length = CHUNK_SIZE;
+    withdrawalsV1Length = CHUNK_SIZE;
   }
 
   function initialize(address _tornadoProxy, IBatchTreeUpdateVerifier _treeUpdateVerifier) public initializer onlyGovernance {

@@ -95,11 +95,11 @@ contract MerkleRootAuction {
     uint256 payout = reward(leavesUntilDeposit(pathIndices[0]), leavesUntilWithdrawal(pathIndices[1]));
 
     tornadoTrees.updateDepositTree(
-      proofs[0], argsHashes[0], tornadoTrees.depositRoot(), newRoots[0], pathIndices[0], events[0]
+      proofs[0], argsHashes[0], currentRoots[0], newRoots[0], pathIndices[0], events[0]
     );
 
     tornadoTrees.updateWithdrawalTree(
-      proofs[1], argsHashes[1], tornadoTrees.withdrawalRoot(), newRoots[1], pathIndices[1], events[1]
+      proofs[1], argsHashes[1], currentRoots[1], newRoots[1], pathIndices[1], events[1]
     );
 
     require(

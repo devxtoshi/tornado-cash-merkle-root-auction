@@ -12,6 +12,11 @@ dotenv.config({
 })
 
 let configuration: HardhatUserConfig = {
+  networks: {
+    hardhat: {
+      blockGasLimit: 9500000
+    }
+  },
   solidity: {
     compilers: [
       {
@@ -42,7 +47,7 @@ let configuration: HardhatUserConfig = {
 }
 
 if(process.env.NETWORK){
-  configuration[process.env.NETWORK] = {
+  configuration.networks[process.env.NETWORK] = {
     url: `${process.env.RPC_ENDPOINT}`,
     accounts: [
       `0x${process.env.PRIVATE_KEY}`

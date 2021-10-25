@@ -24,14 +24,19 @@ interface BatchTreeUpdate {
   argsHash?: string;
 }
 
+const toHexRaw = (t) => {
+  return (BigNumber.from(t).toHexString()).slice(2)
+}
+
 const formatProof = (
     proofPath
 ) => {
   const source = fs.readFileSync(proofPath, "utf8")
+  const { defaultAbiCoder } = ethers.utils
   const proof = JSON.parse(source)
 
-  return ethers.utils.defaultAbiCoder.encode(
-    ["uint256[8]" ], [
+  return defaultAbiCoder.encode(
+    [ "uint256[8]" ], [
       [
         proof.pi_a[0],
         proof.pi_a[1],
@@ -123,9 +128,12 @@ function batchTreeUpdate(tree, events) {
 
   const oldRoot = tree.root().toString()
   const leaves = events.map((e) => poseidonHash([e.instance, e.hash, e.block]))
+
   tree.bulkInsert(leaves)
+
   const newRoot = tree.root().toString()
   let { pathElements, pathIndices } = tree.path(tree.elements().length - 1)
+
   pathElements = pathElements.slice(batchHeight).map((a) => BigNumber.from(a).toString())
   pathIndices = bitsToNumber(pathIndices.slice(batchHeight)).toString()
 
