@@ -110,8 +110,7 @@ contract MerkleRootAuction {
 
     if(tornToken.balanceOf(address(this)) == payout){
       require(
-        leavesUntilWithdrawalSync() == uint256(0) &&
-        leavesUntilDepositSync() == uint256,
+        leavesUntilWithdrawalSync() + leavesUntilDepositSync() == uint256(0),
         "Reward does not match tree fulfillment sync"
       );
     }
