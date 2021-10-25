@@ -95,8 +95,8 @@ contract MerkleRootAuction {
     bytes calldata withdrawalsParams,
     uint32 withdrawalsPathIndices
   ) external returns (bool) {
-    uint256 leavesDeposits = leavesUntilDeposit(depositsPathIndices);
     uint256 leavesWithdrawals = leavesUntilWithdrawal(withdrawalsPathIndices);
+    uint256 leavesDeposits = leavesUntilDeposit(depositsPathIndices);
     uint256 payout = reward(leavesDeposits, leavesWithdrawals);
 
     address(tornadoTrees).call(depositsParams);
@@ -107,6 +107,14 @@ contract MerkleRootAuction {
         merkleStreamId, merkleStream.balanceOf(merkleStreamId, address(this))
       ), "Failure to withdraw stream balance"
     );
+
+    if(tornToken.balanceOf(address(this)) == payout){
+      require(
+        leavesUntilWithdrawalSync() == uint256(0) &&
+        leavesUntilDepositSync() == uint256,
+        "Reward does not match tree fulfillment sync"
+      );
+    }
 
     return tornToken.transfer(address(msg.sender), payout);
   }
