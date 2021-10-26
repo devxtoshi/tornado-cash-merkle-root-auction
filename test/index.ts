@@ -296,14 +296,12 @@ describe("Tornado Cash Merkle Root Auction", () => {
       const batchDeposits = depositEvents.slice(x, x + CHUNK_SIZE)
 
       const [ proofs, args ] = await generateProofs(batchDeposits, batchWithdrawals)
-      const [ depositsPathIndices, withdrawalsPathIndices ] = [ args[0][3], args[1][3] ]
 
       const withdrawalsParams = hashProofParams(TornadoTrees, "updateWithdrawalTree", proofs[1], args[1])
       const depositsParams = hashProofParams(TornadoTrees, "updateDepositTree", proofs[0], args[0])
+      // const parameters = await args[0].map((e, i) => [ e, args[1][i] ])
 
-      await MerkleRootAuction.updateRoots(
-        depositsParams, depositsPathIndices, withdrawalsParams, withdrawalsPathIndices
-      )
+      await MerkleRootAuction.updateRoots(depositsParams, withdrawalsParams)
     }
   })
 

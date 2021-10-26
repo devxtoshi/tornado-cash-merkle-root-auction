@@ -1,4 +1,5 @@
 pragma solidity 0.8.0;
+pragma experimental ABIEncoderV2;
 
 import "./interfaces/ITornadoTrees.sol";
 import "./interfaces/ISablier.sol";
@@ -32,8 +33,7 @@ contract MerkleRootAuction {
   }
 
   function initialiseStream(uint256 streamId) isOperator() public {
-    (address sender, address recipient, , address tokenAddress, , , , ) =
-     merkleStream.getStream(streamId);
+    (address sender, address recipient, , address tokenAddress, , , , ) =  merkleStream.getStream(streamId);
 
     require(sender == operator && recipient == address(this));
     require(tokenAddress == address(tornToken));
@@ -67,13 +67,6 @@ contract MerkleRootAuction {
     leaves = leavesUntilDepositSync() + leavesUntilWithdrawalSync();
   }
 
-  function getLatestLeaves() public view returns (bytes32[2] memory) {
-     return [
-        tornadoTrees.withdrawals(tornadoTrees.lastProcessedWithdrawalLeaf()),
-        tornadoTrees.deposits(tornadoTrees.lastProcessedDepositLeaf())
-     ];
-  }
-
   function reward(uint256 deposits, uint256 withdrawals) public view returns (uint256) {
     uint256 streamBalance = merkleStream.balanceOf(merkleStreamId, address(this));
     uint256 auctionBalance = tornToken.balanceOf(address(this));
@@ -91,16 +84,26 @@ contract MerkleRootAuction {
 
   function updateRoots(
     bytes calldata depositsParams,
-    uint32 depositsPathIndices,
-    bytes calldata withdrawalsParams,
-    uint32 withdrawalsPathIndices
+    bytes calldata withdrawalsParams
   ) external returns (bool) {
-    uint256 leavesWithdrawals = leavesUntilWithdrawal(withdrawalsPathIndices);
-    uint256 leavesDeposits = leavesUntilDeposit(depositsPathIndices);
+    uint32 depositsPathIndex = getPathIndex(withdrawalsParams);
+    uint32 withdrawalsPathIndex = getPathIndex(withdrawalsParams);
+    uint256 leavesWithdrawals = leavesUntilWithdrawal(withdrawalsPathIndex);
+    uint256 leavesDeposits = leavesUntilDeposit(depositsPathIndex);
+    uint256 lastProcessedWithdrawal = tornadoTrees.lastProcessedWithdrawalLeaf();
+    uint256 lastProcessedDeposit = tornadoTrees.lastProcessedDepositLeaf();
     uint256 payout = reward(leavesDeposits, leavesWithdrawals);
 
-    address(tornadoTrees).call(depositsParams);
-    address(tornadoTrees).call(withdrawalsParams);
+    (bool depositsConf, ) = address(tornadoTrees).call(depositsParams);
+    (bool withdrawalsConf, ) = address(tornadoTrees).call(withdrawalsParams);
+
+    require(depositsConf && withdrawalsConf, "Failure to update trees");
+
+    require(
+      lastProcessedWithdrawal + leavesWithdrawals <= tornadoTrees.lastProcessedWithdrawalLeaf()
+      && lastProcessedDeposit + leavesDeposits <= tornadoTrees.lastProcessedDepositLeaf(),
+      "Tree path indices don't match tree fulfillment"
+    );
 
     require(
       merkleStream.withdrawFromStream(
@@ -116,6 +119,10 @@ contract MerkleRootAuction {
     }
 
     return tornToken.transfer(address(msg.sender), payout);
+  }
+
+  function getPathIndex(bytes calldata metadata) public returns (uint32 index) {
+    (, , , , index) = abi.decode(metadata[4:], (bytes, bytes32, bytes32, bytes32, uint32));
   }
 
 }
