@@ -86,10 +86,8 @@ contract MerkleRootAuction {
     bytes calldata depositsParams,
     bytes calldata withdrawalsParams
   ) external returns (bool) {
-    uint32 depositsPathIndex = getPathIndex(withdrawalsParams);
-    uint32 withdrawalsPathIndex = getPathIndex(withdrawalsParams);
-    uint256 leavesWithdrawals = leavesUntilWithdrawal(withdrawalsPathIndex);
-    uint256 leavesDeposits = leavesUntilDeposit(depositsPathIndex);
+    uint256 leavesWithdrawals = leavesUntilWithdrawal(getWithdrawalPathIndex(withdrawalsParams));
+    uint256 leavesDeposits = leavesUntilDeposit(getDepositPathIndex(depositsParams));
     uint256 lastProcessedWithdrawal = tornadoTrees.lastProcessedWithdrawalLeaf();
     uint256 lastProcessedDeposit = tornadoTrees.lastProcessedDepositLeaf();
     uint256 payout = reward(leavesDeposits, leavesWithdrawals);
@@ -121,8 +119,16 @@ contract MerkleRootAuction {
     return tornToken.transfer(address(msg.sender), payout);
   }
 
-  function getPathIndex(bytes calldata metadata) public returns (uint32 index) {
-    (, , , , index) = abi.decode(metadata[4:], (bytes, bytes32, bytes32, bytes32, uint32));
+  function getWithdrawalPathIndex(bytes calldata metadata) public view returns (uint256 length) {
+    (, , , , uint32 index) = abi.decode(metadata[4:], (bytes, bytes32, bytes32, bytes32, uint32));
+
+    length = ((index + 1) * CHUNK_SIZE) - tornadoTrees.lastProcessedWithdrawalLeaf();
+  }
+
+  function getDepositPathIndex(bytes calldata metadata) public view returns (uint256 length) {
+    (, , , , uint32 index) = abi.decode(metadata[4:], (bytes, bytes32, bytes32, bytes32, uint32));
+
+    length = ((index + 1) * CHUNK_SIZE) - tornadoTrees.lastProcessedDepositLeaf();
   }
 
 }
