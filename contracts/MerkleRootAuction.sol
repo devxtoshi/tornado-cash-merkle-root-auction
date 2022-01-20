@@ -13,7 +13,7 @@ contract MerkleRootAuction {
   ISablier public merkleStream;
   IERC20 public tornToken;
 
-  uint256 merkleStreamId;
+  uint256 public merkleStreamId;
   address operator;
 
   modifier isOperator() {

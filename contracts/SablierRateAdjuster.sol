@@ -66,7 +66,7 @@ contract SablierRateAdjuster is Sablier {
     	Types.Stream memory stream = streams[streamId];
       IERC20 token = IERC20(stream.tokenAddress);
 
-    	uint256 refund = newDeposit % (newStopTime - stream.startTime);
+    	uint256 refund = newDeposit % (newStopTime - block.timestamp);
       uint256 depositWithoutRefund = newDeposit - refund;
 
       require(depositWithoutRefund >= newStopTime - stream.startTime, "deposit smaller than time delta");

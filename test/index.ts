@@ -184,7 +184,7 @@ describe("Tornado Cash Merkle Root Auction", () => {
   let auctionAddress: string
   let treesAddress: string
   let tokenAddress: string
-  let streamId: number
+  let streamIndentifer: number
 
   it("Deployments", async() => {
     const BatchTreeUpdateVerifierABI = await ethers.getContractFactory("BatchTreeUpdateVerifier")
@@ -244,9 +244,11 @@ describe("Tornado Cash Merkle Root Auction", () => {
 
   it('Create stream', async() => {
     const SablierRateAdjusterABI = await ethers.getContractFactory("SablierRateAdjuster")
+    const MerkleRootAuctionABI = await ethers.getContractFactory("MerkleRootAuction")
     const TestTokenABI = await ethers.getContractFactory("TestToken")
 
     const SablierRateAdjuster = await SablierRateAdjusterABI.attach(sablierAddress)
+    const MerkleRootAuction = await MerkleRootAuctionABI.attach(auctionAddress)
     const TestToken = await TestTokenABI.attach(tokenAddress)
 
     const latestBlockNumber = await ethers.provider.getBlockNumber()
@@ -264,21 +266,32 @@ describe("Tornado Cash Merkle Root Auction", () => {
     )).wait().then((reciept: any) => {
       const { args }  = reciept.events[reciept.events.length-1]
 
-      streamId = args[args.length-7].toNumber()
+      streamIndentifer = args[args.length-7].toNumber()
     })
+  })
 
+  it('Initialise stream', async() => {
+    const MerkleRootAuctionABI = await ethers.getContractFactory("MerkleRootAuction")
+    const MerkleRootAuction = await MerkleRootAuctionABI.attach(auctionAddress)
+
+    await MerkleRootAuction.initialiseStream(streamIndentifer)
     await timeTravel(86400)
   })
+
+  // 1/3 of these cases fail
 
   it('Adjust stream period', async() => {
     const [ account, proxy ] = await ethers.getSigners()
 
     const SablierRateAdjusterABI = await ethers.getContractFactory("SablierRateAdjuster")
+    const MerkleRootAuctionABI = await ethers.getContractFactory("MerkleRootAuction")
     const TestTokenABI = await ethers.getContractFactory("TestToken")
 
     const SablierRateAdjuster = await SablierRateAdjusterABI.attach(sablierAddress)
+    const MerkleRootAuction = await MerkleRootAuctionABI.attach(auctionAddress)
     const TestToken = await TestTokenABI.attach(tokenAddress)
 
+    const streamId = await MerkleRootAuction.merkleStreamId()
     const remainingBalance = await SablierRateAdjuster.balanceOf(streamId, account.address)
     const streamDetails = await SablierRateAdjuster.getStream(streamId)
 
@@ -287,67 +300,89 @@ describe("Tornado Cash Merkle Root Auction", () => {
 
     const startTime = latestBlock.timestamp
     const endTime = startTime + 1000000
-    const deltaTime = endTime - startTime
+    const deltaTime = BigNumber.from(endTime - startTime)
 
-    // const expectedRefund = remainingBalance % deltaTime
-    // const newDepositAmount = remainingBalance - expectedRefund
-    // const ratePerSecond = newDepositAmount / deltaTime
+    const expectedRefund = remainingBalance.mod(deltaTime)
+    const newDepositAmount = remainingBalance.sub(expectedRefund)
+    const ratePerSecond = newDepositAmount.div(deltaTime)
 
     await SablierRateAdjuster.adjustEndTime(streamId, endTime)
 
     const streamRefund = await TestToken.balanceOf(auctionAddress)
-    // const newStreamDetails = await SablierRateAdjuster.getStream(streamId + 1)
+    const newStreamDetails = await SablierRateAdjuster.getStream(streamId + 1)
 
-    // expect(newStreamDetails.ratePerSecond).to.equal(ratePerSecond)
-    // expect(newStreamDetails.deposit).to.equal(newDepositAmount)
-    // expect(streamRefund).to.equal(expectedRefund)
+    expect(newStreamDetails.deposit).to.equal(newDepositAmount)
+    expect(streamRefund).to.equal(expectedRefund)
 
-    streamId = streamId + 1
+    await MerkleRootAuction.initialiseStream(streamId + 1)
   })
 
   it('Adjust stream amount', async() => {
     const [ account, proxy ] = await ethers.getSigners()
 
     const SablierRateAdjusterABI = await ethers.getContractFactory("SablierRateAdjuster")
+    const MerkleRootAuctionABI = await ethers.getContractFactory("MerkleRootAuction")
     const TestTokenABI = await ethers.getContractFactory("TestToken")
 
     const SablierRateAdjuster = await SablierRateAdjusterABI.attach(sablierAddress)
+    const MerkleRootAuction = await MerkleRootAuctionABI.attach(auctionAddress)
     const TestToken = await TestTokenABI.attach(tokenAddress)
 
+    const streamId = await MerkleRootAuction.merkleStreamId()
     const remainingBalance = await SablierRateAdjuster.balanceOf(streamId, account.address)
     const streamDetails = await SablierRateAdjuster.getStream(streamId)
+
+    console.log(streamId)
 
     const latestBlockNumber = await ethers.provider.getBlockNumber()
     const latestBlock = await ethers.provider.getBlock(latestBlockNumber)
 
-    // ethers parseEther won't function here?
     const newDepositAmount = ethers.utils.parseEther('80000')
     const sablierBalance = await TestToken.balanceOf(sablierAddress)
-    const deltaTime = streamDetails.stopTime - latestBlock.timestamp
+    const deltaTime = BigNumber.from(streamDetails.stopTime - latestBlock.timestamp)
 
-    // const expectedRefund = (newDepositAmount % deltaTime)
-    // const ratePerSecond = newDepositAmount / deltaTime
+    const leftoverBalance = remainingBalance.sub(newDepositAmount)
+    const expectedRefund = newDepositAmount.mod(deltaTime) + leftoverBalance
+    const ratePerSecond = newDepositAmount.div(deltaTime)
 
     await SablierRateAdjuster.adjustDeposit(streamId, newDepositAmount)
 
-    // const streamRefund = await TestToken.balanceOf(account)
-    // const newStreamDetails = await SablierRateAdjuster.getStream(streamId + 1)
+    const streamRefund = await TestToken.balanceOf(account)
+    const newStreamDetails = await SablierRateAdjuster.getStream(streamId + 1)
 
-    // expect(newStreamDetails.ratePerSecond).to.equal(ratePerSecond)
-    // expect(newStreamDetails.deposit).to.equal(newDepositAmount)
-    // expect(expectedRefund).to.equal(streamRefund)
+    expect(newStreamDetails.deposit).to.equal(newDepositAmount)
+    expect(expectedRefund).to.equal(streamRefund)
 
-    streamId = streamId + 1
+    await MerkleRootAuction.initialiseStream(streamId + 1)
   })
 
-  it('Adjust stream period and amount', async() => { })
-
-  it('Initialise stream', async() => {
+  it('Adjust stream period and amount', async() => {
+    const SablierRateAdjusterABI = await ethers.getContractFactory("SablierRateAdjuster")
     const MerkleRootAuctionABI = await ethers.getContractFactory("MerkleRootAuction")
-    const MerkleRootAuction = await MerkleRootAuctionABI.attach(auctionAddress)
+    const TestTokenABI = await ethers.getContractFactory("TestToken")
 
-    await MerkleRootAuction.initialiseStream(streamId)
-    await timeTravel(86400)
+    const SablierRateAdjuster = await SablierRateAdjusterABI.attach(sablierAddress)
+    const MerkleRootAuction = await MerkleRootAuctionABI.attach(auctionAddress)
+    const TestToken = await TestTokenABI.attach(tokenAddress)
+
+    const latestBlockNumber = await ethers.provider.getBlockNumber()
+    const latestBlock = await ethers.provider.getBlock(latestBlockNumber)
+    const streamId = await MerkleRootAuction.merkleStreamId()
+    const streamDetails = await SablierRateAdjuster.getStream(streamId)
+
+    console.log(streamId)
+
+    const startTime = latestBlock.timestamp
+    const endTime = startTime + 10000000
+    const newDeposit = ethers.utils.parseEther('50000')
+
+    const timeDelta = BigNumber.from(endTime - startTime)
+    const deltaR = newDeposit.mod(timeDelta)
+    const newDepositAmount = newDeposit.sub(deltaR)
+
+    await SablierRateAdjuster.adjustEndTimeAndDeposit(streamId, endTime, newDeposit)
+
+    await MerkleRootAuction.initialiseStream(streamId + 1)
   })
 
   it('Reward calculation', async() => {
@@ -361,18 +396,17 @@ describe("Tornado Cash Merkle Root Auction", () => {
 
     const leavesUntilWithdrawalSync = await MerkleRootAuction.leavesUntilWithdrawalSync()
     const leavesUntilDepositSync = await MerkleRootAuction.leavesUntilDepositSync()
+    const streamId = await MerkleRootAuction.merkleStreamId()
     const streamBalance = await SablierRateAdjuster.balanceOf(streamId, auctionAddress)
     const contractBalance = await TestToken.balanceOf(auctionAddress)
 
     const totalBalance = streamBalance.add(contractBalance)
     // 50% fulfillment
-    const expectedReward = totalBalance.div(BigNumber.from(2))
-    const withdrawalsFulfilment = leavesUntilWithdrawalSync / 2
-    const depositsFulfilment = leavesUntilDepositSync / 2
+    const queriedReward = await MerkleRootAuction.reward(
+      leavesUntilDepositSync / 2, leavesUntilWithdrawalSync / 2
+    )
 
-    const queriedReward = await MerkleRootAuction.reward(depositsFulfilment, withdrawalsFulfilment)
-
-    expect(toNumStr(queriedReward)).to.equal(toNumStr(expectedReward))
+    expect(queriedReward).to.equal(totalBalance / 2)
   })
 
   it('Update roots', async() => {
@@ -474,7 +508,7 @@ describe("Tornado Cash Merkle Root Auction", () => {
     const deposits = await getPastEvents("DepositData", startingDepositLeaf, treesAddress)
     const withdrawals = await getPastEvents("WithdrawalData", startingWithdrawalLeaf, treesAddress)
 
-    //Irregular notes
+    // Irregular notes
     await register(irregularNotes[3], TornadoTrees, proxy)
     await register(irregularNotes[2], TornadoTrees, proxy)
     await register(irregularNotes[1], TornadoTrees, proxy)
