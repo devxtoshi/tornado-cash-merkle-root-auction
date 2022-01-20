@@ -302,9 +302,8 @@ contract Sablier is IERC1620, Exponential, ReentrancyGuard {
      * @param streamId The id of the stream to cancel.
      * @return bool true=success, otherwise false.
      */
-    function cancelStream(uint256 streamId)
-        public
-        nonReentrant
+    function _cancelStream(uint256 streamId)
+        internal
         streamExists(streamId)
         onlySenderOrRecipient(streamId)
         returns (bool)
@@ -324,4 +323,15 @@ contract Sablier is IERC1620, Exponential, ReentrancyGuard {
 
         return true;
     }
+
+    /* nonReentrant bypass when inherited */
+
+    function cancelStream(uint256 streamId)
+      external
+      nonReentrant
+      returns (bool)
+    {
+      return _cancelStream(streamId);
+    }
+
 }

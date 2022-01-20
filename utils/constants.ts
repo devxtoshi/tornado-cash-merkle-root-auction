@@ -14,3 +14,22 @@ export const solConfig  = {
       runs: 200,
     }
  }
+
+ export const treeSearchParams = {
+    depositsFrom: 1,
+    depositsStep: 1,
+    withdrawalsFrom: 2,
+    withdrawalsStep: 2
+ }
+
+export const mockData = {
+   instances: [
+     '0x1111000000000000000000000000000000001111',
+     '0x2222000000000000000000000000000000002222',
+     '0x3333000000000000000000000000000000003333',
+     '0x4444000000000000000000000000000000004444'
+   ],
+   blocks: [
+     '0xaaaaaaaa', '0xbbbbbbbb', '0xcccccccc', '0xdddddddd'
+   ]
+ }

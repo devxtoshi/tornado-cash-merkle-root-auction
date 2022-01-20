@@ -55,14 +55,6 @@ contract MerkleRootAuction {
     remainingLeaves = totalLeaves - lastLeaf;
   }
 
-  function leavesUntilWithdrawal(uint256 i) public view returns (uint256 leaves) {
-    leaves = (i - tornadoTrees.lastProcessedWithdrawalLeaf());
-  }
-
-  function leavesUntilDeposit(uint256 i) public view returns (uint256 leaves) {
-    leaves = (i - tornadoTrees.lastProcessedDepositLeaf());
-  }
-
   function pendingLeaves() public view returns (uint256 leaves) {
     leaves = leavesUntilDepositSync() + leavesUntilWithdrawalSync();
   }
@@ -86,8 +78,8 @@ contract MerkleRootAuction {
     bytes calldata depositsParams,
     bytes calldata withdrawalsParams
   ) external returns (bool) {
-    uint256 leavesWithdrawals = leavesUntilWithdrawal(getWithdrawalPathIndex(withdrawalsParams));
-    uint256 leavesDeposits = leavesUntilDeposit(getDepositPathIndex(depositsParams));
+    uint256 leavesDeposits = getDepositPathIndex(depositsParams);
+    uint256 leavesWithdrawals = getWithdrawalPathIndex(withdrawalsParams);
     uint256 lastProcessedWithdrawal = tornadoTrees.lastProcessedWithdrawalLeaf();
     uint256 lastProcessedDeposit = tornadoTrees.lastProcessedDepositLeaf();
     uint256 payout = reward(leavesDeposits, leavesWithdrawals);
