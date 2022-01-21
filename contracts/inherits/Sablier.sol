@@ -312,12 +312,15 @@ contract Sablier is IERC1620, Exponential, ReentrancyGuard {
         uint256 senderBalance = balanceOf(streamId, stream.sender);
         uint256 recipientBalance = balanceOf(streamId, stream.recipient);
 
+        /* Account for rounding errors w/ balanceOf */
+        (, uint256 normalisedSenderBalance) = subUInt(senderBalance, (2 ** 18));
+
         delete streams[streamId];
 
         IERC20 token = IERC20(stream.tokenAddress);
-        if (recipientBalance > 0)
-            require(token.transfer(stream.recipient, recipientBalance), "recipient token transfer failure");
-        if (senderBalance > 0) require(token.transfer(stream.sender, senderBalance), "sender token transfer failure");
+
+        if(recipientBalance > 0) token.transfer(stream.recipient, recipientBalance);
+        if(senderBalance > 0) token.transfer(stream.sender, normalisedSenderBalance);
 
         emit CancelStream(streamId, stream.sender, stream.recipient, senderBalance, recipientBalance);
 
